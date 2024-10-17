@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"github.com/google/uuid"
 	"github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -127,12 +126,14 @@ func handleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     err := json.NewDecoder(r.Body).Decode(&user)
     if err != nil {
         http.Error(w, "Invalid request payload", http.StatusBadRequest)
+        log.Println("Error decoding JSON:", err)
         return
     }
 
     // Validate required fields
     if user.Nickname == "" || user.Email == "" || user.Password == "" {
         http.Error(w, "Nickname, Email, and Password are required", http.StatusBadRequest)
+        log.Println("Validation failed: Missing required fields")
         return
     }
 
@@ -140,6 +141,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
     if err != nil {
         http.Error(w, "Error hashing password", http.StatusInternalServerError)
+        log.Println("Error hashing password:", err)
         return
     }
 
@@ -151,6 +153,8 @@ func handleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         userID, user.Nickname, user.Email, string(hashedPassword), user.FirstName, user.LastName, user.Gender, user.Age)
     if err != nil {
+        log.Println("Error inserting user into database:", err)
+
         // Check for unique constraint violations
         if sqliteErr, ok := err.(sqlite3.Error); ok {
             if sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
@@ -158,6 +162,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
                 return
             }
         }
+
         http.Error(w, "Database error", http.StatusInternalServerError)
         return
     }
@@ -165,6 +170,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     // Respond with success
     respondWithJSON(w, http.StatusCreated, Response{Message: "User registered successfully"})
 }
+
 
 // handleLogin processes user login
 func handleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {

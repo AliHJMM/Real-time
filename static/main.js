@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const firstName = document.getElementById('first-name').value;
       const lastName = document.getElementById('last-name').value;
       const gender = document.getElementById('gender').value;
-      const age = document.getElementById('age').value;
+      const ageInput = document.getElementById('age').value;
+      const age = ageInput ? parseInt(ageInput, 10) : null; // Convert to integer or set to null if empty
 
       const data = { nickname, email, password, firstName, lastName, gender, age };
 
