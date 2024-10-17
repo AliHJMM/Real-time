@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Forum</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Registration and Login Forms -->
+        <div id="auth-container">
+            <h2>Register</h2>
+            <form id="register-form">
+                <input type="text" id="nickname" placeholder="Nickname" required>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <input type="text" id="first-name" placeholder="First Name">
+                <input type="text" id="last-name" placeholder="Last Name">
+                <select id="gender">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                <input type="number" id="age" placeholder="Age">
+                <button type="submit">Register</button>
+            </form>
+
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="text" id="login-identifier" placeholder="Nickname or Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <!-- Main Forum Content -->
+        <div id="forum-container" style="display: none;">
+            <button id="logout-button">Logout</button>
+            <h1>Welcome to the Real-Time Forum!</h1>
+            <!-- Add more forum components here -->
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
