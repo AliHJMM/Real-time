@@ -35,6 +35,7 @@
             <form id="login-form" class="space-y-4">
                 <div>
                     <label for="login-username" class="block text-sky-700">Nickname or Email:</label>
+
                     <input type="text" id="login-username" name="username" required class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
                 </div>
                 <div>
@@ -56,18 +57,46 @@
             <h2 class="text-2xl font-bold text-sky-800 mb-2">Register</h2>
             <p class="text-sky-600 text-sm mb-4">Create a new account</p>
             <form id="register-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                 <div>
-                    <label for="register-username" class="block text-sky-700">Username:</label>
-                    <input type="text" id="register-username" name="username" required class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
+                    <label for="register-first-name" class="block text-sky-700">First Name:</label>
+                    <input type="text" id="register-first-name" name="first_name" required class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
                 </div>
+                
+                <div>
+                    <label for="register-last-name" class="block text-sky-700">Last Name:</label>
+                    <input type="text" id="register-last-name" name="last_name" required class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                
+                <div>
+                    <label for="register-age" class="block text-sky-700">Age:</label>
+                    <input type="number" id="register-age" name="age" required min="1" class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                
+                <div>
+                    <label for="register-gender" class="block text-sky-700">Gender:</label>
+                    <select id="register-gender" name="gender" required class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="register-nickname" class="block text-sky-700">Nickname:</label>
+                    <input type="text" id="register-nickname" name="nickname" required class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                
                 <div class="mb-4">
                     <label for="register-email" class="block text-gray-700">Email:</label>
                     <input type="email" id="register-email" name="email" required class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
                 </div>
+                
                 <div class="mb-4">
                     <label for="register-password" class="block text-gray-700">Password:</label>
                     <input type="password" id="register-password" name="password" required class="w-full p-2 border rounded focus:ring-sky-500 focus:border-sky-500">
                 </div>
+                
                 <div class="mb-4 flex items-center">
                     <input type="checkbox" id="register-show-password" class="mr-2">
                     <label for="register-show-password" class="text-gray-700">Show Password</label>

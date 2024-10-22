@@ -1,9 +1,24 @@
+-- =========================================
+-- Talknet Forum Database Schema and Initialization
+-- =========================================
+
+-- Enable Foreign Key Constraints
+PRAGMA foreign_keys = ON;
+
+-- =========================================
+-- 1. Create Tables
+-- =========================================
+
 -- Create Users table
 CREATE TABLE IF NOT EXISTS Users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    age INTEGER,
+    gender TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -14,6 +29,7 @@ CREATE TABLE IF NOT EXISTS Posts (
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
@@ -24,6 +40,7 @@ CREATE TABLE IF NOT EXISTS Comments (
     user_id INTEGER NOT NULL,
     content TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
@@ -50,7 +67,7 @@ CREATE TABLE IF NOT EXISTS Likes_Dislikes (
     user_id INTEGER NOT NULL,
     post_id INTEGER,
     comment_id INTEGER,
-    like_dislike BOOLEAN NOT NULL,
+    like_dislike BOOLEAN NOT NULL, -- TRUE for Like, FALSE for Dislike
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE,
@@ -66,19 +83,59 @@ CREATE TABLE IF NOT EXISTS Sessions (
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
-INSERT INTO Categories (name) VALUES ('Technology');
-INSERT INTO Categories (name) VALUES ('Sport');
-INSERT INTO Categories (name) VALUES ('Science');
-INSERT INTO Categories (name) VALUES ('Education');
-INSERT INTO Categories (name) VALUES ('Gaming');
-INSERT INTO Categories (name) VALUES ('TV');
-INSERT INTO Categories (name) VALUES ('Comedy');
-INSERT INTO Categories (name) VALUES ('History');
-INSERT INTO Categories (name) VALUES ('Social');
-INSERT INTO Categories (name) VALUES ('Finance');
-INSERT INTO Categories (name) VALUES ('News');
-INSERT INTO Categories (name) VALUES ('Others');
+-- =========================================
+-- 2. Insert Initial Data
+-- =========================================
 
-INSERT INTO Users (email, username, password) VALUES ('user1@example.com', 'user1', 'password1');   
-INSERT INTO Posts (user_id, title, content) VALUES (1, 'First Post', 'This is the first post.');
+-- Insert Categories
+INSERT OR IGNORE INTO Categories (name) VALUES 
+('Technology'),
+('Sport'),
+('Science'),
+('Education'),
+('Gaming'),
+('TV'),
+('Comedy'),
+('History'),
+('Social'),
+('Finance'),
+('News'),
+('Others');
+
+-- =========================================
+-- 3. Insert a Default User
+-- =========================================
+
+-- IMPORTANT:
+-- The password below is hashed using bcrypt.
+-- Replace '$2a$10$XyZabcdefghijklmnopqrstuv' with the actual bcrypt hash of your desired password.
+
+INSERT INTO Users (email, username, password, first_name, last_name, age, gender) 
+VALUES (
+    'user1@example.com', 
+    'user1', 
+    '$2a$10$XyZabcdefghijklmnopqrstuv', -- Replace with a valid bcrypt hash
+    'John', 
+    'Doe', 
+    30, 
+    'Male'
+);
+
+-- =========================================
+-- 4. Insert a Default Post
+-- =========================================
+
+INSERT INTO Posts (user_id, title, content, updated_at) 
+VALUES (
+    1, 
+    'Welcome to Talknet!', 
+    'This is the first post on Talknet. Feel free to start discussions!', 
+    CURRENT_TIMESTAMP
+);
+
+-- =========================================
+-- 5. Additional Inserts (Optional)
+-- =========================================
+
+-- You can add more initial data here if needed, such as additional users, posts, comments, etc.
 

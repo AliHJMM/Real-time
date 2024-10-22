@@ -7,9 +7,11 @@ import (
 )
 
 // CreateUser inserts a new user into the database.
-func CreateUser(db *sql.DB, username, email, password string) error {
-	_, err := db.Exec("INSERT INTO users (username, email, password, created_at) VALUES (?, ?, ?, ?)",
-		username, email, password, time.Now())
+func CreateUser(db *sql.DB, username, email, password, firstName, lastName string, age int, gender string) error {
+	_, err := db.Exec(`
+			INSERT INTO users (username, email, password, first_name, last_name, age, gender, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			username, email, password, firstName, lastName, age, gender, time.Now())
 	return err
 }
 
@@ -64,4 +66,11 @@ func GetUsername(db *sql.DB, id int) (string, error) {
 		return "", err
 	}
 	return username, nil
+}
+
+func GetUserByEmail(db *sql.DB, email string) (structs.User, error) {
+	row := db.QueryRow("SELECT id, username, email, password, first_name, last_name, age, gender, created_at FROM users WHERE email = ?", email)
+	var user structs.User
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age, &user.Gender, &user.CreatedAt)
+	return user, err
 }

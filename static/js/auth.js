@@ -58,15 +58,27 @@ function initAuth() {
     if (registerForm) {
         registerForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            const username = document.getElementById('register-username').value.trim();
             const email = document.getElementById('register-email').value.trim();
             const password = document.getElementById('register-password').value.trim();
+            const firstName = document.getElementById('register-first-name').value.trim();
+            const lastName = document.getElementById('register-last-name').value.trim();
+            const age = parseInt(document.getElementById('register-age').value.trim());
+            const gender = document.getElementById('register-gender').value.trim();
+            const username=document.getElementById('register-nickname').value.trim();
 
             fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ username: username, email: email, password: password }),
+                body: JSON.stringify({   
+                     username:username,
+                    email: email,
+                    password: password,
+                    first_name: firstName,
+                    last_name: lastName,
+                    age: age,
+                    gender: gender,
+                }),
             })
                 .then(response => {
                     if (response.status === 201) {

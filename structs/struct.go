@@ -10,9 +10,13 @@ type ErrorData struct {
 // User represents a user in the forum.
 type User struct {
 	ID        int       `json:"id"`
-	Username  string    `json:"username"`
+	Username string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Age       int       `json:"age"`
+	Gender    string    `json:"gender"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

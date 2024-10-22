@@ -7,12 +7,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func LoginUser(db *sql.DB, username, password string) (structs.User, error) {
-    user, err := Database.GetUserByUsername(db, username)
+func LoginUser(db *sql.DB, identifier, password string) (structs.User, error) {
+    var user structs.User
+    // Try to get user by username
+    user, err := Database.GetUserByUsername(db, identifier)
     if err != nil {
-        return user, err
+        // If not found, try to get user by email
+        user, err = Database.GetUserByEmail(db, identifier)
+        if err != nil {
+            return user, err
+        }
     }
 
+    // Compare password
     err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
     if err != nil {
         return user, err
@@ -20,3 +27,4 @@ func LoginUser(db *sql.DB, username, password string) (structs.User, error) {
 
     return user, nil
 }
+
