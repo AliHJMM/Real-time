@@ -55,7 +55,12 @@ func ValidatePassword(password string) error {
 
 func RegisterUser(db *sql.DB, username, email, password, firstName, lastName string, age int, gender string) error {
 	// Existing validation...
-
+	if err := ValidateUsername(username); err != nil {
+		return err
+}
+if err := ValidatePassword(password); err != nil {
+	return err
+}
 	// Additional validation for new fields
 	if firstName == "" || lastName == "" {
 			return errors.New("first Name and Last Name cannot be empty")

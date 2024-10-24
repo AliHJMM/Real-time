@@ -9,8 +9,8 @@ import (
 func GetCategoryNamesByPostID(db *sql.DB, postID int) ([]structs.Category, error) {
 	query := `
 		SELECT c.name 
-		FROM Post_Categories pc
-		JOIN Categories c ON pc.category_id = c.id
+		FROM post_Categories pc
+		JOIN categories c ON pc.category_id = c.id
 		WHERE pc.post_id = ?
 	`
 

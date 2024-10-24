@@ -9,8 +9,6 @@ function loadHome() {
       if (!response.ok) {
         throw new Error("Failed to fetch posts");
       }
-      console.log("API Response:", response.json);
-
       return response.json();
     })
     .then((data) => {
@@ -21,10 +19,10 @@ function loadHome() {
       console.error("Error loading posts:", error);
       const postsContainer = document.getElementById("posts-container");
       if (postsContainer) {
-        postsContainer.innerHTML =
-          '<p class="text-red-500">Error loading posts.</p>';
+          postsContainer.innerHTML = '<p class="text-red-500">Error loading posts.</p>';
       }
-    });
+  });
+  
 }
 
 function renderPosts(posts, category = null) {
@@ -158,7 +156,7 @@ function createPostCard(post) {
     event.stopPropagation();
     handleLikeDislike(post.id, "like", "post");
     likeButton.classList.remove("text-blue-600");
-    likeButton.classList.add("text-grey-600");
+    likeButton.classList.add("text-gray-600");
   });
 
   dislikeButton.addEventListener("click", function (event) {
@@ -166,7 +164,7 @@ function createPostCard(post) {
     event.stopPropagation();
     handleLikeDislike(post.id, "dislike", "post");
     dislikeButton.classList.remove("text-red-600");
-    dislikeButton.classList.add("text-grey-600");
+    dislikeButton.classList.add("text-gray-600");
   });
 
   card.appendChild(reactionsDiv);
@@ -195,6 +193,7 @@ function handleLikeDislike(postId, action, type) {
   fetch(`/api/like_dislike`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials:"include",
     body: JSON.stringify({
       postId: parseInt(postId),
       action: action,

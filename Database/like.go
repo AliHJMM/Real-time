@@ -17,14 +17,14 @@ func CreateLike(db *sql.DB, userID int, postID *int, commentID *int) error {
 // GetLikesByPostID retrieves likes for a post by its ID.
 func GetReactionsByPostID(db *sql.DB, postID int) ([]structs.Like, []structs.Dislike, error) {
 	// Query for likes (like_dislike = 1)
-	likeRows, err := db.Query("SELECT id, user_id, post_id, comment_id, created_at FROM Likes_Dislikes WHERE post_id = ? AND like_dislike = 1", postID)
+	likeRows, err := db.Query("SELECT id, user_id, post_id, comment_id, created_at FROM likes_dislikes WHERE post_id = ? AND like_dislike = 1", postID)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer likeRows.Close()
 
 	// Query for dislikes (like_dislike = 0)
-	dislikeRows, err := db.Query("SELECT id, user_id, post_id, comment_id, created_at FROM Likes_Dislikes WHERE post_id = ? AND like_dislike = 0", postID)
+	dislikeRows, err := db.Query("SELECT id, user_id, post_id, comment_id, created_at FROM likes_dislikes WHERE post_id = ? AND like_dislike = 0", postID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -79,20 +79,20 @@ func GetLikeDislikeCounts(db *sql.DB, postID int, Type string) (int, int, error)
 	var likeCount, dislikeCount int
 	var err error
 	if Type == "post" {
-		err = db.QueryRow("SELECT COUNT(*) FROM Likes_Dislikes WHERE post_id = ? AND like_dislike = 1 ", postID).Scan(&likeCount)
+		err = db.QueryRow("SELECT COUNT(*) FROM likes_dislikes WHERE post_id = ? AND like_dislike = 1 ", postID).Scan(&likeCount)
 		if err != nil {
 			return 0, 0, err
 		}
-		err = db.QueryRow("SELECT COUNT(*) FROM Likes_Dislikes WHERE post_id = ? AND like_dislike = 0 ", postID).Scan(&dislikeCount)
+		err = db.QueryRow("SELECT COUNT(*) FROM likes_dislikes WHERE post_id = ? AND like_dislike = 0 ", postID).Scan(&dislikeCount)
 		if err != nil {
 			return 0, 0, err
 		}
 	} else if Type == "comment" {
-		err = db.QueryRow("SELECT COUNT(*) FROM Likes_Dislikes WHERE comment_id = ? AND like_dislike = 1 ", postID).Scan(&likeCount)
+		err = db.QueryRow("SELECT COUNT(*) FROM likes_dislikes WHERE comment_id = ? AND like_dislike = 1 ", postID).Scan(&likeCount)
 		if err != nil {
 			return 0, 0, err
 		}
-		err = db.QueryRow("SELECT COUNT(*) FROM Likes_Dislikes WHERE comment_id = ? AND like_dislike = 0 ", postID).Scan(&dislikeCount)
+		err = db.QueryRow("SELECT COUNT(*) FROM likes_dislikes WHERE comment_id = ? AND like_dislike = 0 ", postID).Scan(&dislikeCount)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -104,9 +104,9 @@ func CheckReactionExists(db *sql.DB, ID int, userID int, Type string) (int, erro
 	var value bool
 	var err error
 	if Type == "post" {
-		err = db.QueryRow("SELECT like_dislike FROM Likes_Dislikes WHERE post_id = ? AND user_id = ?", ID, userID).Scan(&value)
+		err = db.QueryRow("SELECT like_dislike FROM likes_dislikes WHERE post_id = ? AND user_id = ?", ID, userID).Scan(&value)
 	} else if Type == "comment" {
-		err = db.QueryRow("SELECT like_dislike FROM Likes_Dislikes WHERE comment_id = ? AND user_id = ?", ID, userID).Scan(&value)
+		err = db.QueryRow("SELECT like_dislike FROM likes_dislikes WHERE comment_id = ? AND user_id = ?", ID, userID).Scan(&value)
 	} else {
 		return -1, err
 	}
@@ -124,14 +124,14 @@ func CheckReactionExists(db *sql.DB, ID int, userID int, Type string) (int, erro
 
 func GetReactionsByCommentID(db *sql.DB, commentID int) ([]structs.Like, []structs.Dislike, error) {
 	// Query for likes (like_dislike = 1)
-	likeRows, err := db.Query("SELECT id, user_id, post_id, comment_id, created_at FROM Likes_Dislikes WHERE comment_id = ? AND like_dislike = 1", commentID)
+	likeRows, err := db.Query("SELECT id, user_id, post_id, comment_id, created_at FROM likes_dislikes WHERE comment_id = ? AND like_dislike = 1", commentID)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer likeRows.Close()
 
 	// Query for dislikes (like_dislike = 0)
-	dislikeRows, err := db.Query("SELECT id, user_id, post_id, comment_id, created_at FROM Likes_Dislikes WHERE comment_id = ? AND like_dislike = 0", commentID)
+	dislikeRows, err := db.Query("SELECT id, user_id, post_id, comment_id, created_at FROM likes_dislikes WHERE comment_id = ? AND like_dislike = 0", commentID)
 	if err != nil {
 		return nil, nil, err
 	}

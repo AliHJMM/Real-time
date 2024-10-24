@@ -51,7 +51,7 @@ func GetUserByID(db *sql.DB, id int) (structs.User, error) {
 
 func GetUserIdByPostID(db *sql.DB, id int) (int, error) {
 	var userID int
-	err := db.QueryRow("SELECT user_id FROM Posts WHERE id = ?", id).Scan(&userID)
+	err := db.QueryRow("SELECT user_id FROM posts WHERE id = ?", id).Scan(&userID)
 	if err != nil {
 		return 0, err
 	}
@@ -61,7 +61,7 @@ func GetUserIdByPostID(db *sql.DB, id int) (int, error) {
 
 func GetUsername(db *sql.DB, id int) (string, error) {
 	var username string
-	err := db.QueryRow("SELECT username FROM Users WHERE id = ?", id).Scan(&username)
+	err := db.QueryRow("SELECT username FROM users WHERE id = ?", id).Scan(&username)
 	if err != nil {
 		return "", err
 	}

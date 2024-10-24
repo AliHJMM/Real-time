@@ -29,6 +29,6 @@ func CreateSession(w http.ResponseWriter, userID int) {
         Path:     "/",
         Expires:  time.Now().Add(24 * time.Hour),
         HttpOnly: true, // Enhances security by preventing JavaScript access
-        Secure:   true, // Ensures the cookie is sent over HTTPS
+        Secure:   false, // Ensures the cookie is sent over HTTPS
     })
 }

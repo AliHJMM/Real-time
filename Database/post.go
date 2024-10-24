@@ -48,9 +48,9 @@ func GetAllPosts(db *sql.DB) ([]structs.Post, error) {
 func GetPostsByCategory(db *sql.DB, category string) ([]structs.Post, error) {
 	rows, err := db.Query(`
         SELECT p.id, p.user_id, p.title, p.content, p.created_at
-        FROM Posts p
-        JOIN Post_Categories pc ON p.id = pc.post_id
-        JOIN Categories c ON pc.category_id = c.id
+        FROM posts p
+        JOIN post_categories pc ON p.id = pc.post_id
+        JOIN categories c ON pc.category_id = c.id
         WHERE c.name = ?`, category)
 	if err != nil {
 		return nil, err
@@ -91,25 +91,32 @@ func GetPostByUserID(db *sql.DB,user_id int) ([]structs.Post, error) {
 
 
 
-
-
-
-func GetLikedPosts(db *sql.DB,user_id int) ([]structs.Post, error) {
-	rows, err := db.Query("SELECT Posts.* FROM Posts INNER JOIN Likes_Dislikes ON Posts.id = Likes_Dislikes.post_id WHERE Likes_Dislikes.user_id = ?  AND Likes_Dislikes.like_dislike = 1 AND Likes_Dislikes.post_id IS NOT NULL;",user_id)
+func GetLikedPosts(db *sql.DB, userID int) ([]structs.Post, error) {
+	rows, err := db.Query(`
+			SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.updated_at
+			FROM posts p
+			INNER JOIN likes_dislikes ld ON p.id = ld.post_id
+			WHERE ld.user_id = ? AND ld.like_dislike = 1`, userID)
 	if err != nil {
-		return nil, err
+			return nil, err
 	}
 	defer rows.Close()
 
 	var posts []structs.Post
 	for rows.Next() {
-		var post structs.Post
-		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		posts = append(posts, post)
+			var post structs.Post
+			err := rows.Scan(
+					&post.ID,
+					&post.UserID,
+					&post.Title,
+					&post.Content,
+					&post.CreatedAt,
+					&post.UpdatedAt, // Added this line
+			)
+			if err != nil {
+					return nil, err
+			}
+			posts = append(posts, post)
 	}
-
 	return posts, nil
 }
