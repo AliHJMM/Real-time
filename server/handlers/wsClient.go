@@ -89,6 +89,19 @@ func (c *Client) readPump() {
         // Set the sender ID to the current client
         message.SenderID = c.userID
 
+        // Check if the recipient is online
+        if !IsUserOnline(message.ReceiverID) {
+            // Send an error message back to the sender
+            errorMessage := structs.Message{
+                SenderID:   0, // System message
+                ReceiverID: c.userID,
+                Content:    "Cannot send message. The user is offline.",
+                CreatedAt:  time.Now(),
+            }
+            c.send <- errorMessage
+            continue
+        }
+
         // Save message to the database
         err = SaveMessageToDB(&message)
         if err != nil {
@@ -152,4 +165,12 @@ func SaveMessageToDB(message *structs.Message) error {
     message.CreatedAt = time.Now()
 
     return nil
+}
+
+// IsUserOnline checks if a user is online.
+func IsUserOnline(userID int) bool {
+    sessions.Mutex.Lock()
+    defer sessions.Mutex.Unlock()
+    _, isOnline := sessions.OnlineUsers[userID]
+    return isOnline
 }

@@ -55,6 +55,16 @@ function loadChatView() {
             .then(data => {
                 users = data.users;
                 renderUsers();
+                // Update selectedUser's online status
+                if (selectedUser) {
+                    const updatedUser = users.find(user => user.id === selectedUser.id);
+                    if (updatedUser) {
+                        selectedUser.online = updatedUser.online;
+                    } else {
+                        selectedUser.online = false;
+                    }
+                    updateChatInterface();
+                }
             })
             .catch(error => {
                 console.error('Error fetching users:', error);
@@ -71,13 +81,18 @@ function loadChatView() {
 
         ws.onmessage = function (event) {
             const message = JSON.parse(event.data);
+
+            if (message.sender_id === 0) {
+                // System message (error or notification)
+                alert(message.content);
+                return;
+            }
+
             if (selectedUser && (message.sender_id === selectedUser.id || message.receiver_id === selectedUser.id)) {
                 chatMessages.push(message);
                 renderChatMessages(true);
             }
         };
-        
-        
 
         ws.onclose = function () {
             console.log('WebSocket connection closed, retrying in 5 seconds...');
@@ -95,7 +110,10 @@ function loadChatView() {
     function renderUsers() {
         usersList.innerHTML = '';
         const searchTerm = searchInput.value.toLowerCase();
-        filteredUsers = users.filter(user => user.id !== currentUserID && user.username.toLowerCase().includes(searchTerm));
+        filteredUsers = users.filter(user =>
+            user.id !== currentUserID &&
+            user.username.toLowerCase().includes(searchTerm)
+        );
 
         // Sort users by last message timestamp or alphabetically
         filteredUsers.sort((a, b) => {
@@ -109,9 +127,13 @@ function loadChatView() {
 
         filteredUsers.forEach(user => {
             const li = document.createElement('li');
-            li.className = `flex items-center space-x-4 p-3 bg-white rounded-lg shadow-sm transition-all duration-200 ${user.online ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
+            li.className = `flex items-center space-x-4 p-3 bg-white rounded-lg shadow-sm transition-all duration-200 ${
+                user.online ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'
+            }`;
 
-            li.addEventListener('click', () => handleUserClick(user));
+            if (user.online) {
+                li.addEventListener('click', () => handleUserClick(user));
+            }
 
             // Avatar
             const avatarDiv = document.createElement('div');
@@ -136,7 +158,9 @@ function loadChatView() {
 
             // Badge
             const badge = document.createElement('span');
-            badge.className = `ml-auto px-2 py-1 text-xs font-medium rounded-full ${user.online ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`;
+            badge.className = `ml-auto px-2 py-1 text-xs font-medium rounded-full ${
+                user.online ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+            }`;
             badge.textContent = user.online ? 'Online' : 'Offline';
 
             li.appendChild(avatarDiv);
@@ -166,6 +190,10 @@ function loadChatView() {
      * Handle User Click to Open Chat
      */
     function handleUserClick(user) {
+        if (!user.online) {
+            alert(`${user.username} is offline and cannot be messaged.`);
+            return;
+        }
         selectedUser = user;
         cardTitle.textContent = `Chat with ${user.username}`;
         userListView.classList.add('hidden');
@@ -215,14 +243,18 @@ function loadChatView() {
         chatMessagesContainer.innerHTML = '';
         chatMessages.forEach(message => {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `flex ${message.sender_id === currentUserID ? "justify-end" : "justify-start"} mb-4`;
+            messageDiv.className = `flex ${
+                message.sender_id === currentUserID ? 'justify-end' : 'justify-start'
+            } mb-4`;
 
             const messageBubble = document.createElement('div');
-            messageBubble.className = `max-w-[70%] p-3 rounded-lg ${message.sender_id === currentUserID ? "bg-sky-500 text-white" : "bg-gray-200"}`;
+            messageBubble.className = `max-w-[70%] p-3 rounded-lg ${
+                message.sender_id === currentUserID ? 'bg-sky-500 text-white' : 'bg-gray-200'
+            }`;
 
             const senderP = document.createElement('p');
             senderP.className = 'text-sm font-semibold mb-1';
-            senderP.textContent = message.sender_id === currentUserID ? "You" : selectedUser.username;
+            senderP.textContent = message.sender_id === currentUserID ? 'You' : selectedUser.username;
 
             const contentP = document.createElement('p');
             contentP.textContent = message.content;
@@ -230,7 +262,10 @@ function loadChatView() {
             const timeP = document.createElement('p');
             timeP.className = 'text-xs text-right mt-1 opacity-70';
             const date = new Date(message.created_at);
-            timeP.textContent = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            timeP.textContent = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+            })}`;
 
             messageBubble.appendChild(senderP);
             messageBubble.appendChild(contentP);
@@ -251,24 +286,26 @@ function loadChatView() {
     function handleSendMessage() {
         const messageContent = newMessageInput.value.trim();
         if (messageContent && ws && ws.readyState === WebSocket.OPEN) {
+            if (!selectedUser.online) {
+                alert('Cannot send message. The user is offline.');
+                return;
+            }
             const messageObj = {
                 content: messageContent,
-                receiver_id: selectedUser.id
+                receiver_id: selectedUser.id,
             };
             ws.send(JSON.stringify(messageObj));
             // Clear the input field
             newMessageInput.value = '';
         }
     }
-    
-    
 
     /**
      * Handle Back Button to Return to User List
      */
     function handleBack() {
         selectedUser = null;
-        cardTitle.textContent = "User Online Status";
+        cardTitle.textContent = 'User Online Status';
         chatView.classList.add('hidden');
         userListView.classList.remove('hidden');
     }
@@ -279,6 +316,24 @@ function loadChatView() {
     function handleScroll() {
         if (chatMessagesContainer.scrollTop === 0 && !loadingMessages) {
             loadChatHistory();
+        }
+    }
+
+    /**
+     * Update Chat Interface Based on User's Online Status
+     */
+    function updateChatInterface() {
+        const offlineMessage = document.getElementById('chat-offline-message');
+        if (!selectedUser.online) {
+            newMessageInput.disabled = true;
+            sendButton.disabled = true;
+            sendButton.classList.add('opacity-50', 'cursor-not-allowed');
+            offlineMessage.classList.remove('hidden');
+        } else {
+            newMessageInput.disabled = false;
+            sendButton.disabled = false;
+            sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            offlineMessage.classList.add('hidden');
         }
     }
 
