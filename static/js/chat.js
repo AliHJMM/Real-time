@@ -72,14 +72,11 @@ function loadChatView() {
         ws.onmessage = function (event) {
             const message = JSON.parse(event.data);
             if (selectedUser && (message.sender_id === selectedUser.id || message.receiver_id === selectedUser.id)) {
-                // Check if the message already exists in chatMessages
-                const isDuplicate = chatMessages.some((msg) => msg.id === message.id);
-                if (!isDuplicate) {
-                    chatMessages.push(message);
-                    renderChatMessages(true);
-                }
+                chatMessages.push(message);
+                renderChatMessages(true);
             }
         };
+        
         
 
         ws.onclose = function () {
@@ -259,21 +256,11 @@ function loadChatView() {
                 receiver_id: selectedUser.id
             };
             ws.send(JSON.stringify(messageObj));
-    
             // Clear the input field
             newMessageInput.value = '';
-    
-            // Optionally add the message to the chatMessages array and render it immediately
-            const message = {
-                sender_id: currentUserID,
-                receiver_id: selectedUser.id,
-                content: messageContent,
-                created_at: new Date().toISOString()
-            };
-            chatMessages.push(message);
-            renderChatMessages(true);
         }
     }
+    
     
 
     /**

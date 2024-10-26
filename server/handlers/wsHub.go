@@ -6,7 +6,7 @@ import (
 )
 
 type Hub struct {
-    clients    map[int]*Client
+    clients    map[int]map[*Client]bool // Changed to map of clients per user ID
     broadcast  chan structs.Message
     register   chan *Client
     unregister chan *Client
@@ -14,7 +14,7 @@ type Hub struct {
 }
 
 var HubInstance = Hub{
-    clients:    make(map[int]*Client),
+    clients:    make(map[int]map[*Client]bool),
     broadcast:  make(chan structs.Message),
     register:   make(chan *Client),
     unregister: make(chan *Client),
@@ -25,33 +25,58 @@ func (h *Hub) Run() {
         select {
         case client := <-h.register:
             h.mutex.Lock()
-            h.clients[client.userID] = client
+            // Initialize the map for the user ID if it doesn't exist
+            if _, ok := h.clients[client.userID]; !ok {
+                h.clients[client.userID] = make(map[*Client]bool)
+            }
+            // Add the client to the user's connections
+            h.clients[client.userID][client] = true
             h.mutex.Unlock()
+
         case client := <-h.unregister:
             h.mutex.Lock()
-            if _, ok := h.clients[client.userID]; ok {
-                delete(h.clients, client.userID)
-                close(client.send)
-            }
-            h.mutex.Unlock()
-        case message := <-h.broadcast:
-            h.mutex.Lock()
-            // Send to receiver
-            if receiver, ok := h.clients[message.ReceiverID]; ok {
-                select {
-                case receiver.send <- message:
-                default:
-                    close(receiver.send)
-                    delete(h.clients, receiver.userID)
+            if clients, ok := h.clients[client.userID]; ok {
+                if _, ok := clients[client]; ok {
+                    delete(clients, client)
+                    close(client.send)
+                    // Remove the user ID map if no clients remain
+                    if len(clients) == 0 {
+                        delete(h.clients, client.userID)
+                    }
                 }
             }
-            // Send to sender
-            if sender, ok := h.clients[message.SenderID]; ok {
-                select {
-                case sender.send <- message:
-                default:
-                    close(sender.send)
-                    delete(h.clients, sender.userID)
+            h.mutex.Unlock()
+
+        case message := <-h.broadcast:
+            h.mutex.Lock()
+            // Send to all connections of the receiver
+            if clients, ok := h.clients[message.ReceiverID]; ok {
+                for client := range clients {
+                    select {
+                    case client.send <- message:
+                    default:
+                        close(client.send)
+                        delete(clients, client)
+                    }
+                }
+                // Clean up if no clients remain
+                if len(clients) == 0 {
+                    delete(h.clients, message.ReceiverID)
+                }
+            }
+            // Send to all connections of the sender
+            if clients, ok := h.clients[message.SenderID]; ok {
+                for client := range clients {
+                    select {
+                    case client.send <- message:
+                    default:
+                        close(client.send)
+                        delete(clients, client)
+                    }
+                }
+                // Clean up if no clients remain
+                if len(clients) == 0 {
+                    delete(h.clients, message.SenderID)
                 }
             }
             h.mutex.Unlock()
