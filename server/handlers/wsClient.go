@@ -5,7 +5,7 @@ import (
     "encoding/json"
     "log"
     "net/http"
-    "talknet/Database"
+    "time"
     "talknet/server/sessions"
     "talknet/structs"
 
@@ -79,13 +79,13 @@ func (c *Client) readPump() {
         message.SenderID = c.userID
 
         // Save message to the database
-        err = SaveMessageToDB(message)
+        err = SaveMessageToDB(&message)
         if err != nil {
             log.Println("Failed to save message:", err)
             continue
         }
 
-        // Broadcast the message to the receiver
+        // Broadcast the message to both sender and receiver
         HubInstance.broadcast <- message
     }
 }
@@ -114,6 +114,18 @@ func (c *Client) writePump() {
     }
 }
 
-func SaveMessageToDB(message structs.Message) error {
-    return Database.SaveMessage(db, message)
+func SaveMessageToDB(message *structs.Message) error {
+    result, err := db.Exec("INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
+        message.SenderID, message.ReceiverID, message.Content)
+    if err != nil {
+        return err
+    }
+    // Get the inserted message ID
+    messageID, err := result.LastInsertId()
+    if err != nil {
+        return err
+    }
+    message.ID = int(messageID)
+    message.CreatedAt = time.Now()
+    return nil
 }

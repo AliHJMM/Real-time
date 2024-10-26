@@ -36,12 +36,22 @@ func (h *Hub) Run() {
             h.mutex.Unlock()
         case message := <-h.broadcast:
             h.mutex.Lock()
+            // Send to receiver
             if receiver, ok := h.clients[message.ReceiverID]; ok {
                 select {
                 case receiver.send <- message:
                 default:
                     close(receiver.send)
                     delete(h.clients, receiver.userID)
+                }
+            }
+            // Send to sender
+            if sender, ok := h.clients[message.SenderID]; ok {
+                select {
+                case sender.send <- message:
+                default:
+                    close(sender.send)
+                    delete(h.clients, sender.userID)
                 }
             }
             h.mutex.Unlock()

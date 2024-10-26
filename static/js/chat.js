@@ -72,10 +72,15 @@ function loadChatView() {
         ws.onmessage = function (event) {
             const message = JSON.parse(event.data);
             if (selectedUser && (message.sender_id === selectedUser.id || message.receiver_id === selectedUser.id)) {
-                chatMessages.push(message);
-                renderChatMessages(true);
+                // Check if the message already exists in chatMessages
+                const isDuplicate = chatMessages.some((msg) => msg.id === message.id);
+                if (!isDuplicate) {
+                    chatMessages.push(message);
+                    renderChatMessages(true);
+                }
             }
         };
+        
 
         ws.onclose = function () {
             console.log('WebSocket connection closed, retrying in 5 seconds...');
@@ -247,16 +252,29 @@ function loadChatView() {
      * Handle Sending a New Message
      */
     function handleSendMessage() {
-        const message = newMessageInput.value.trim();
-        if (message && ws && ws.readyState === WebSocket.OPEN) {
+        const messageContent = newMessageInput.value.trim();
+        if (messageContent && ws && ws.readyState === WebSocket.OPEN) {
             const messageObj = {
-                content: message,
+                content: messageContent,
                 receiver_id: selectedUser.id
             };
             ws.send(JSON.stringify(messageObj));
+    
+            // Clear the input field
             newMessageInput.value = '';
+    
+            // Optionally add the message to the chatMessages array and render it immediately
+            const message = {
+                sender_id: currentUserID,
+                receiver_id: selectedUser.id,
+                content: messageContent,
+                created_at: new Date().toISOString()
+            };
+            chatMessages.push(message);
+            renderChatMessages(true);
         }
     }
+    
 
     /**
      * Handle Back Button to Return to User List
