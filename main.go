@@ -55,6 +55,12 @@ func main() {
     // Ensure database is closed when main function exits
     defer database.Close()
 
+    // Initialize the database instance in the WebSocket handler
+    handlers.InitDB(database)
+
+    // Start the WebSocket hub
+    go handlers.HubInstance.Run()
+
     // Setup static file server
     http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
@@ -86,8 +92,16 @@ func main() {
     http.HandleFunc("/api/categories", func(w http.ResponseWriter, r *http.Request) {
         handlers.CategoriesAPIHandler(database, w, r)
     })
-    http.HandleFunc("/api/online_users", func(w http.ResponseWriter, r *http.Request) { // Added this line
+    http.HandleFunc("/api/online_users", func(w http.ResponseWriter, r *http.Request) {
         handlers.OnlineUsersAPIHandler(database, w, r)
+    })
+    http.HandleFunc("/api/chat_history", func(w http.ResponseWriter, r *http.Request) {
+        handlers.ChatHistoryHandler(database, w, r)
+    })
+
+    // Add WebSocket endpoint
+    http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+        handlers.ServeWs(w, r)
     })
 
     // Serve index.html for any non-API route

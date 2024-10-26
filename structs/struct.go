@@ -19,6 +19,15 @@ type User struct {
 	Gender    string    `json:"gender"`
 	CreatedAt time.Time `json:"created_at"`
 	Online    bool      `json:"online"` // Added this line
+	LastMessageTime int64    `json:"lastMessageTime"` // Unix timestamp
+}
+
+type Message struct {
+    ID         int       `json:"id"`
+    SenderID   int       `json:"sender_id"`
+    ReceiverID int       `json:"receiver_id"`
+    Content    string    `json:"content"`
+    CreatedAt  time.Time `json:"created_at"`
 }
 
 // Post represents a forum post.

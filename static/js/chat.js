@@ -4,6 +4,13 @@ function loadChatView() {
     let users = [];
     let currentUserID = null;
     let filteredUsers = [];
+    let selectedUser = null;
+    let chatMessages = [];
+    let ws = null;
+    let limit = 10;
+    let offset = 0;
+    let loadingMessages = false;
+    let allMessagesLoaded = false;
 
     // DOM Elements
     const usersList = document.getElementById('chat-users-list');
@@ -19,12 +26,10 @@ function loadChatView() {
     const newMessageInput = document.getElementById('chat-new-message-input');
     const sendButton = document.getElementById('chat-send-button');
 
-    let selectedUser = null;
-    let chatMessages = [];
-
     // Fetch Current User ID and Users
     fetchCurrentUserID().then(() => {
         fetchUsers();
+        setupWebSocket();
     });
 
     // Fetch users periodically to update online status
@@ -56,6 +61,32 @@ function loadChatView() {
             });
     }
 
+    function setupWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+        ws.onopen = function () {
+            console.log('WebSocket connection established');
+        };
+
+        ws.onmessage = function (event) {
+            const message = JSON.parse(event.data);
+            if (selectedUser && (message.sender_id === selectedUser.id || message.receiver_id === selectedUser.id)) {
+                chatMessages.push(message);
+                renderChatMessages(true);
+            }
+        };
+
+        ws.onclose = function () {
+            console.log('WebSocket connection closed, retrying in 5 seconds...');
+            setTimeout(setupWebSocket, 5000);
+        };
+
+        ws.onerror = function (error) {
+            console.error('WebSocket error:', error);
+        };
+    }
+
     /**
      * Render the list of users
      */
@@ -64,13 +95,21 @@ function loadChatView() {
         const searchTerm = searchInput.value.toLowerCase();
         filteredUsers = users.filter(user => user.id !== currentUserID && user.username.toLowerCase().includes(searchTerm));
 
+        // Sort users by last message timestamp or alphabetically
+        filteredUsers.sort((a, b) => {
+            const aLastMsg = a.lastMessageTime || 0;
+            const bLastMsg = b.lastMessageTime || 0;
+            if (aLastMsg !== bLastMsg) {
+                return bLastMsg - aLastMsg; // Descending order
+            }
+            return a.username.localeCompare(b.username);
+        });
+
         filteredUsers.forEach(user => {
             const li = document.createElement('li');
             li.className = `flex items-center space-x-4 p-3 bg-white rounded-lg shadow-sm transition-all duration-200 ${user.online ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
 
-            if (user.online) {
-                li.addEventListener('click', () => handleUserClick(user));
-            }
+            li.addEventListener('click', () => handleUserClick(user));
 
             // Avatar
             const avatarDiv = document.createElement('div');
@@ -125,39 +164,71 @@ function loadChatView() {
      * Handle User Click to Open Chat
      */
     function handleUserClick(user) {
-        if (user.online) {
-            selectedUser = user;
-            cardTitle.textContent = `Chat with ${user.username}`;
-            userListView.classList.add('hidden');
-            chatView.classList.remove('hidden');
-            // Initialize Chat Messages (In real app, fetch from server)
-            chatMessages = [];
-            renderChatMessages();
-        }
+        selectedUser = user;
+        cardTitle.textContent = `Chat with ${user.username}`;
+        userListView.classList.add('hidden');
+        chatView.classList.remove('hidden');
+        chatMessages = [];
+        offset = 0;
+        allMessagesLoaded = false;
+        loadChatHistory();
+    }
+
+    /**
+     * Load Chat History
+     */
+    function loadChatHistory() {
+        if (loadingMessages || allMessagesLoaded) return;
+        loadingMessages = true;
+
+        fetch(`/api/chat_history?user_id=${selectedUser.id}&limit=${limit}&offset=${offset}`, {
+            method: 'GET',
+            credentials: 'include',
+        })
+            .then(response => response.json())
+            .then(messages => {
+                if (messages.length < limit) {
+                    allMessagesLoaded = true;
+                }
+                chatMessages = messages.concat(chatMessages);
+                offset += limit;
+                renderChatMessages();
+                loadingMessages = false;
+
+                if (offset === limit) {
+                    // Scroll to bottom on initial load
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading chat history:', error);
+                loadingMessages = false;
+            });
     }
 
     /**
      * Render Chat Messages
      */
-    function renderChatMessages() {
+    function renderChatMessages(scrollToBottom = false) {
         chatMessagesContainer.innerHTML = '';
         chatMessages.forEach(message => {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `flex ${message.sender === "You" ? "justify-end" : "justify-start"} mb-4`;
+            messageDiv.className = `flex ${message.sender_id === currentUserID ? "justify-end" : "justify-start"} mb-4`;
 
             const messageBubble = document.createElement('div');
-            messageBubble.className = `max-w-[70%] p-3 rounded-lg ${message.sender === "You" ? "bg-sky-500 text-white" : "bg-gray-200"}`;
+            messageBubble.className = `max-w-[70%] p-3 rounded-lg ${message.sender_id === currentUserID ? "bg-sky-500 text-white" : "bg-gray-200"}`;
 
             const senderP = document.createElement('p');
             senderP.className = 'text-sm font-semibold mb-1';
-            senderP.textContent = message.sender;
+            senderP.textContent = message.sender_id === currentUserID ? "You" : selectedUser.username;
 
             const contentP = document.createElement('p');
             contentP.textContent = message.content;
 
             const timeP = document.createElement('p');
             timeP.className = 'text-xs text-right mt-1 opacity-70';
-            timeP.textContent = message.time;
+            const date = new Date(message.created_at);
+            timeP.textContent = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
             messageBubble.appendChild(senderP);
             messageBubble.appendChild(contentP);
@@ -166,8 +237,10 @@ function loadChatView() {
             chatMessagesContainer.appendChild(messageDiv);
         });
 
-        // Scroll to bottom
-        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        if (scrollToBottom) {
+            // Scroll to bottom
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        }
     }
 
     /**
@@ -175,15 +248,12 @@ function loadChatView() {
      */
     function handleSendMessage() {
         const message = newMessageInput.value.trim();
-        if (message) {
-            const newMsg = {
-                id: chatMessages.length + 1,
-                sender: "You",
+        if (message && ws && ws.readyState === WebSocket.OPEN) {
+            const messageObj = {
                 content: message,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                receiver_id: selectedUser.id
             };
-            chatMessages.push(newMsg);
-            renderChatMessages();
+            ws.send(JSON.stringify(messageObj));
             newMessageInput.value = '';
         }
     }
@@ -198,6 +268,15 @@ function loadChatView() {
         userListView.classList.remove('hidden');
     }
 
+    /**
+     * Handle Infinite Scrolling
+     */
+    function handleScroll() {
+        if (chatMessagesContainer.scrollTop === 0 && !loadingMessages) {
+            loadChatHistory();
+        }
+    }
+
     // Event Listeners
     searchButton.addEventListener('click', handleSearch);
     searchInput.addEventListener('input', handleSearch);
@@ -208,7 +287,21 @@ function loadChatView() {
             handleSendMessage();
         }
     });
+    chatMessagesContainer.addEventListener('scroll', debounce(handleScroll, 300));
 
     // Initial Render
     renderUsers();
+}
+
+/**
+ * Debounce Function
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function () {
+        const context = this,
+            args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
 }

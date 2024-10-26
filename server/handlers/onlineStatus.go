@@ -11,7 +11,7 @@ import (
 
 func OnlineUsersAPIHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
     // Ensure the user is authenticated
-    _, isLoggedIn := sessions.GetSessionUserID(r)
+    userID, isLoggedIn := sessions.GetSessionUserID(r)
     if !isLoggedIn {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
@@ -32,6 +32,13 @@ func OnlineUsersAPIHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
         // Set the online status
         _, isOnline := sessions.OnlineUsers[user.ID]
         user.Online = isOnline
+
+        // Get the last message time
+        lastMessageTime, err := Database.GetLastMessageTime(db, userID, user.ID)
+        if err == nil {
+            user.LastMessageTime = lastMessageTime
+        }
+
         responseUsers = append(responseUsers, user)
     }
     sessions.Mutex.Unlock()
