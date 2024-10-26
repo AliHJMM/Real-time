@@ -1,34 +1,11 @@
 // static/js/chat.js
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize Chat View if the current view is Chat
-    const currentView = document.querySelector('.view[style="display: block;"]');
-    if (currentView && currentView.id === 'chat-main-view') {
-        loadChatView();
-    }
-});
-
 function loadChatView() {
-    /**
-     * Sample Users Data
-     * In a real application, this data should be fetched from the server via an API.
-     */
-    const users = [
-        { id: 1, name: "Alice Johnson", avatar: "https://via.placeholder.com/80", online: true, lastSeen: "Just now" },
-        { id: 2, name: "Bob Smith", avatar: "https://via.placeholder.com/80", online: false, lastSeen: "5 minutes ago" },
-        { id: 3, name: "Charlie Brown", avatar: "https://via.placeholder.com/80", online: true, lastSeen: "Just now" },
-        { id: 4, name: "Diana Prince", avatar: "https://via.placeholder.com/80", online: false, lastSeen: "1 hour ago" },
-        { id: 5, name: "Ethan Hunt", avatar: "https://via.placeholder.com/80", online: true, lastSeen: "Just now" },
-        { id: 6, name: "Fiona Gallagher", avatar: "https://via.placeholder.com/80", online: false, lastSeen: "2 days ago" },
-        { id: 7, name: "George Lucas", avatar: "https://via.placeholder.com/80", online: true, lastSeen: "Just now" },
-        { id: 8, name: "Hannah Montana", avatar: "https://via.placeholder.com/80", online: false, lastSeen: "1 week ago" },
-    ];
+    let users = [];
+    let currentUserID = null;
+    let filteredUsers = [];
 
-    let filteredUsers = [...users];
-    let selectedUser = null;
-    let chatMessages = [];
-
-    // DOM Elements (IDs prefixed with 'chat-')
+    // DOM Elements
     const usersList = document.getElementById('chat-users-list');
     const searchInput = document.getElementById('chat-search-input');
     const searchButton = document.getElementById('chat-search-button');
@@ -42,14 +19,55 @@ function loadChatView() {
     const newMessageInput = document.getElementById('chat-new-message-input');
     const sendButton = document.getElementById('chat-send-button');
 
+    let selectedUser = null;
+    let chatMessages = [];
+
+    // Fetch Current User ID and Users
+    fetchCurrentUserID().then(() => {
+        fetchUsers();
+    });
+
+    // Fetch users periodically to update online status
+    setInterval(fetchUsers, 5000); // Fetch users every 5 seconds
+
+    function fetchCurrentUserID() {
+        return fetch('/api/profile', { method: 'GET', credentials: 'include', cache: 'no-store' })
+            .then(response => response.json())
+            .then(data => {
+                currentUserID = data.userID;
+            })
+            .catch(error => {
+                console.error('Error fetching current user ID:', error);
+            });
+    }
+
+    function fetchUsers() {
+        fetch('/api/online_users', {
+            method: 'GET',
+            credentials: 'include',
+        })
+            .then(response => response.json())
+            .then(data => {
+                users = data.users;
+                renderUsers();
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+            });
+    }
+
     /**
      * Render the list of users
      */
     function renderUsers() {
         usersList.innerHTML = '';
+        const searchTerm = searchInput.value.toLowerCase();
+        filteredUsers = users.filter(user => user.id !== currentUserID && user.username.toLowerCase().includes(searchTerm));
+
         filteredUsers.forEach(user => {
             const li = document.createElement('li');
-            li.className = `flex items-center space-x-4 p-3 bg-white rounded-lg shadow-sm transition-all duration-200 hover:shadow-md ${user.online ? 'cursor-pointer' : ''}`;
+            li.className = `flex items-center space-x-4 p-3 bg-white rounded-lg shadow-sm transition-all duration-200 ${user.online ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
+
             if (user.online) {
                 li.addEventListener('click', () => handleUserClick(user));
             }
@@ -58,8 +76,8 @@ function loadChatView() {
             const avatarDiv = document.createElement('div');
             avatarDiv.className = 'h-12 w-12 relative';
             const avatarImg = document.createElement('img');
-            avatarImg.src = user.avatar;
-            avatarImg.alt = user.name;
+            avatarImg.src = 'https://via.placeholder.com/80'; // Replace with user avatar if available
+            avatarImg.alt = user.username;
             avatarImg.className = 'h-12 w-12 rounded-full';
             avatarDiv.appendChild(avatarImg);
 
@@ -68,10 +86,10 @@ function loadChatView() {
             userInfo.className = 'flex-grow';
             const nameP = document.createElement('p');
             nameP.className = 'font-semibold text-sky-800';
-            nameP.textContent = user.name;
+            nameP.textContent = user.username;
             const statusP = document.createElement('p');
             statusP.className = 'text-sm text-gray-500';
-            statusP.textContent = user.online ? 'Active now' : `Last seen: ${user.lastSeen}`;
+            statusP.textContent = user.online ? 'Active now' : 'Offline';
             userInfo.appendChild(nameP);
             userInfo.appendChild(statusP);
 
@@ -87,17 +105,19 @@ function loadChatView() {
         });
 
         // Update Online Count
-        const onlineUsers = filteredUsers.filter(user => user.online).length;
-        onlineCount.textContent = onlineUsers;
-        onlineText.textContent = onlineUsers !== 1 ? 's' : '';
+        const onlineUsersCount = users.filter(user => user.online && user.id !== currentUserID).length;
+        if (onlineCount) {
+            onlineCount.textContent = onlineUsersCount;
+        }
+        if (onlineText) {
+            onlineText.textContent = onlineUsersCount !== 1 ? 's' : '';
+        }
     }
 
     /**
      * Handle Search Functionality
      */
     function handleSearch() {
-        const term = searchInput.value.toLowerCase();
-        filteredUsers = users.filter(user => user.name.toLowerCase().includes(term));
         renderUsers();
     }
 
@@ -107,15 +127,11 @@ function loadChatView() {
     function handleUserClick(user) {
         if (user.online) {
             selectedUser = user;
-            cardTitle.textContent = `Chat with ${user.name}`;
+            cardTitle.textContent = `Chat with ${user.username}`;
             userListView.classList.add('hidden');
             chatView.classList.remove('hidden');
             // Initialize Chat Messages (In real app, fetch from server)
-            chatMessages = [
-                { id: 1, sender: user.name, content: "Hey there!", time: "2:30 PM" },
-                { id: 2, sender: "You", content: "Hi! How are you?", time: "2:31 PM" },
-                { id: 3, sender: user.name, content: "I'm good, thanks! How about you?", time: "2:32 PM" },
-            ];
+            chatMessages = [];
             renderChatMessages();
         }
     }
@@ -184,11 +200,7 @@ function loadChatView() {
 
     // Event Listeners
     searchButton.addEventListener('click', handleSearch);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleSearch();
-        }
-    });
+    searchInput.addEventListener('input', handleSearch);
     backButton.addEventListener('click', handleBack);
     sendButton.addEventListener('click', handleSendMessage);
     newMessageInput.addEventListener('keypress', (e) => {

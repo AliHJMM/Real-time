@@ -11,13 +11,18 @@ func GetSessionUserID(r *http.Request) (int, bool) {
     }
 
     sessionID := cookie.Value
+
+    Mutex.Lock()
     userID, ok := sessionStore[sessionID]
+    Mutex.Unlock()
     if !ok {
         return -1, false
     }
 
-    // Verify that the session ID matches the one stored for the user
-    if currentSessionID, exists := userSession[userID]; !exists || currentSessionID != sessionID {
+    Mutex.Lock()
+    currentSessionID, exists := userSession[userID]
+    Mutex.Unlock()
+    if !exists || currentSessionID != sessionID {
         // The session is invalid or has been replaced
         return -1, false
     }

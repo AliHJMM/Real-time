@@ -18,6 +18,7 @@ type User struct {
 	Age       int       `json:"age"`
 	Gender    string    `json:"gender"`
 	CreatedAt time.Time `json:"created_at"`
+	Online    bool      `json:"online"` // Added this line
 }
 
 // Post represents a forum post.
