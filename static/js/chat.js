@@ -107,9 +107,16 @@ function loadChatView() {
         };
     
         ws.onmessage = function (event) {
-            console.log('WebSocket message received:', event.data);
-            // Handle incoming messages
+            console.log("WebSocket message received:", event.data);
+            const message = JSON.parse(event.data);
+            
+            // If message is for the currently selected user, display it
+            if (selectedUser && message.sender_id === selectedUser.id) {
+                chatMessages.push(message);
+                renderChatMessages(true);  // true to scroll to bottom on new message
+            }
         };
+        
     
         ws.onclose = function (event) {
             console.log('WebSocket connection closed:', event);
@@ -229,48 +236,54 @@ function loadChatView() {
         offset = 0;
         allMessagesLoaded = false;
         loadChatHistory();
-
+    
         // Update the chat interface based on the user's online status
         updateChatInterface();
     }
-
+    
     /**
      * Load chat history with the selected user.
      */
     function loadChatHistory() {
-    if (loadingMessages || allMessagesLoaded) return;
-    loadingMessages = true;
-
-    fetch(`/api/chat_history?user_id=${selectedUser.id}&limit=${limit}&offset=${offset}`, {
-        method: 'GET',
-        credentials: 'include',
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch chat history');
-            }
-            return response.json();
+        if (!selectedUser) {
+            console.warn("No user selected for chat.");
+            return;
+        }
+    
+        if (loadingMessages || allMessagesLoaded) return;
+        loadingMessages = true;
+    
+        fetch(`/api/chat_history?user_id=${selectedUser.id}&limit=${limit}&offset=${offset}`, {
+            method: 'GET',
+            credentials: 'include',
         })
-        .then(messages => {
-            if (messages.length < limit) {
-                allMessagesLoaded = true;
-            }
-            // Prepend new messages to the existing chatMessages array
-            chatMessages = messages.concat(chatMessages);
-            offset += limit;
-            renderChatMessages();
-            loadingMessages = false;
-
-            if (offset === limit) {
-                // Scroll to bottom on initial load
-                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-            }
-        })
-        .catch(error => {
-            console.error('Error loading chat history:', error);
-            loadingMessages = false;
-        });
-}
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch chat history");
+                }
+                return response.json();
+            })
+            .then(messages => {
+                if (messages.length < limit) {
+                    allMessagesLoaded = true;
+                }
+                chatMessages = messages.concat(chatMessages);
+                offset += limit;
+                renderChatMessages();
+    
+                if (offset === limit) {
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                }
+    
+                loadingMessages = false;
+            })
+            .catch(error => {
+                console.error("Error loading chat history:", error);
+                loadingMessages = false;
+            });
+    }
+    
+    
 
 
     /**
@@ -323,21 +336,35 @@ function loadChatView() {
      * Handle sending a new message.
      */
     function handleSendMessage() {
+        if (!selectedUser) {
+            console.error("No user selected for chat. selectedUser is:", selectedUser);
+            return;
+        }
+    
         const messageContent = newMessageInput.value.trim();
         if (messageContent && ws && ws.readyState === WebSocket.OPEN) {
             if (!selectedUser.online) {
-                displaySystemMessage('Cannot send message. The user is offline.');
+                displaySystemMessage("Cannot send message. The user is offline.");
                 return;
             }
+    
             const messageObj = {
                 content: messageContent,
                 receiver_id: selectedUser.id,
+                sender_id: currentUserID,
+                created_at: new Date().toISOString()
             };
+    
             ws.send(JSON.stringify(messageObj));
-            // Clear the input field
+            chatMessages.push(messageObj);
+            renderChatMessages(true);
+    
             newMessageInput.value = '';
         }
     }
+    
+    
+    
 
     /**
      * Handle the back button to return to the user list view.
@@ -353,6 +380,11 @@ function loadChatView() {
      * Handle infinite scrolling by loading more messages when scrolled to the top.
      */
     function handleScroll() {
+        if (!selectedUser) {
+            console.warn("No user selected for chat.");
+            return;
+        }
+    
         if (chatMessagesContainer.scrollTop === 0 && !loadingMessages) {
             loadChatHistory();
         }
