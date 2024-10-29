@@ -52,7 +52,8 @@ function loadChatView() {
                 return response.json();
             })
             .then(data => {
-                currentUserID = data.id; // Assuming the profile API returns the user's ID as 'id'
+                currentUserID = data.userID;
+                console.log('Current User ID:', currentUserID);
             })
             .catch(error => {
                 console.error('Error fetching current user ID:', error);
@@ -61,6 +62,8 @@ function loadChatView() {
                 showView('login-view');
             });
     }
+    
+    
 
     /**
      * Fetch the list of online users from the server.
