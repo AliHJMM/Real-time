@@ -34,18 +34,20 @@ func InitDB(database *sql.DB) {
 }
 
 // ServeWs handles WebSocket requests from the peer.
+// handlers/wsClient.go
+
 func ServeWs(w http.ResponseWriter, r *http.Request) {
-    // Get the user ID from the session
+    // Authenticate the user
     userID, isLoggedIn := sessions.GetSessionUserID(r)
     if !isLoggedIn {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
 
-    // Upgrade the HTTP request to a WebSocket connection
+    // Upgrade the HTTP connection to a WebSocket
     conn, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
-        log.Println("Upgrade error:", err)
+        log.Println("WebSocket Upgrade error:", err)
         return
     }
 
@@ -64,7 +66,12 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
     go client.writePump()
 }
 
+
 // readPump pumps messages from the WebSocket connection to the hub.
+// handlers/wsClient.go
+
+// handlers/wsClient.go
+
 func (c *Client) readPump() {
     defer func() {
         HubInstance.unregister <- c
@@ -93,14 +100,14 @@ func (c *Client) readPump() {
 
         // Check if the recipient is online
         if !IsUserOnline(message.ReceiverID) {
-            // Send an error message back to the sender
-            errorMessage := structs.Message{
+            // Send a system message back to the sender indicating the recipient is offline
+            systemMessage := structs.Message{
                 SenderID:   0, // System message
                 ReceiverID: c.userID,
                 Content:    "Cannot send message. The user is offline.",
                 CreatedAt:  time.Now(),
             }
-            c.send <- errorMessage
+            c.send <- systemMessage
             continue
         }
 
@@ -115,6 +122,12 @@ func (c *Client) readPump() {
         HubInstance.broadcast <- message
     }
 }
+
+
+
+
+// writePump remains unchanged
+
 
 // writePump pumps messages from the hub to the WebSocket connection.
 func (c *Client) writePump() {

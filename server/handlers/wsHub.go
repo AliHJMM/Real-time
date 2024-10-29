@@ -21,6 +21,7 @@ var HubInstance = Hub{
     unregister: make(chan *Client),
 }
 
+
 func (h *Hub) Run() {
     for {
         select {
@@ -32,7 +33,7 @@ func (h *Hub) Run() {
             }
             // Add the client to the user's connections
             h.clients[client.userID][client] = true
-        
+
             // Mark user as online if they weren't already
             if len(h.clients[client.userID]) == 1 {
                 sessions.Mutex.Lock()
@@ -58,7 +59,6 @@ func (h *Hub) Run() {
                 }
             }
             h.mutex.Unlock()
-        
 
         case message := <-h.broadcast:
             h.mutex.Lock()
