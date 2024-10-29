@@ -3,6 +3,7 @@ package handlers
 import (
     "sync"
     "talknet/structs"
+    "talknet/server/sessions"
 )
 
 type Hub struct {
@@ -31,6 +32,13 @@ func (h *Hub) Run() {
             }
             // Add the client to the user's connections
             h.clients[client.userID][client] = true
+        
+            // Mark user as online if they weren't already
+            if len(h.clients[client.userID]) == 1 {
+                sessions.Mutex.Lock()
+                sessions.OnlineUsers[client.userID] = true
+                sessions.Mutex.Unlock()
+            }
             h.mutex.Unlock()
 
         case client := <-h.unregister:
@@ -42,10 +50,15 @@ func (h *Hub) Run() {
                     // Remove the user ID map if no clients remain
                     if len(clients) == 0 {
                         delete(h.clients, client.userID)
+                        // Mark user as offline
+                        sessions.Mutex.Lock()
+                        delete(sessions.OnlineUsers, client.userID)
+                        sessions.Mutex.Unlock()
                     }
                 }
             }
             h.mutex.Unlock()
+        
 
         case message := <-h.broadcast:
             h.mutex.Lock()

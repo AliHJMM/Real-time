@@ -2,7 +2,6 @@ package sessions
 
 import (
     "net/http"
-    "time"
     "sync"
 
     "github.com/google/uuid"
@@ -39,10 +38,10 @@ func CreateSession(w http.ResponseWriter, userID int) {
         Name:     "session_id",
         Value:    sessionID,
         Path:     "/",
-        Expires:  time.Now().Add(24 * time.Hour),
-        HttpOnly: true, // Enhances security by preventing JavaScript access
+        HttpOnly: true,
         Secure:   false, // Set to true if using HTTPS
     })
+    
 }
 
 func InitSessionManagement() {
