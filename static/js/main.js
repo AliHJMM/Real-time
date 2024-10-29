@@ -27,10 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
             handleRoute();
         }
     });
-    // window.addEventListener('beforeunload', function (e) {
-    //     // Send a synchronous AJAX request to logout
-    //     navigator.sendBeacon('/api/logout');
-    });
+   
     
 });
 
