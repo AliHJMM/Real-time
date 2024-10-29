@@ -44,6 +44,14 @@ function renderPosts(posts, category = null) {
   if (filteredPosts.length > 0) {
     filteredPosts.forEach((post) => {
       const postCard = createPostCard(post);
+
+      // Add click event to open the post details view with comments
+      postCard.addEventListener("click", function() {
+        // Update the URL to the post details view with the specific post_id
+        window.history.pushState({}, '', `/post-details?post_id=${post.id}`);
+        handleRoute(); // Call handleRoute to load the post details and comments
+      });
+
       postsContainer.appendChild(postCard);
     });
   } else {
@@ -51,6 +59,7 @@ function renderPosts(posts, category = null) {
       "<p>No posts available for the selected category.</p>";
   }
 }
+
 
 function createPostCard(post) {
   const card = document.createElement("div");
