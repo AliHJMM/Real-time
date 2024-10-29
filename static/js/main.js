@@ -1,6 +1,7 @@
 // static/js/main.js
 
 document.addEventListener('DOMContentLoaded', function () {
+    
     // Initialize the app
     handleRoute();
 
@@ -8,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initAuth();
 
     // Set up event listeners
-    window.addEventListener('popstate', handleRoute);
+    window.addEventListener('popstate', handleRoute );
 
     // Use event delegation to capture clicks on dynamically added elements
     document.addEventListener('click', function (event) {

@@ -102,8 +102,7 @@ function loadPostDetails(postId) {
         })
         .catch(error => {
             console.error('Error loading post details:', error);
-            alert('Failed to load post details.');
-            window.history.pushState({}, '', '/home');
+            window.history.pushState({}, '', '/error');
             handleRoute();
         });
 }

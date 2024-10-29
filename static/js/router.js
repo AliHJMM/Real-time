@@ -1,7 +1,6 @@
 // static/js/router.js
 
 function handleRoute() {
-    console.log('Handling route:', window.location.pathname);
     const path = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
     const postId = urlParams.get('post_id');
@@ -70,9 +69,10 @@ function handleRoute() {
                     break;
                 default:
                     // Redirect unknown routes to home
-                    window.history.replaceState({}, '', '/home');
-                    showView('home-view');
-                    loadHome();
+                    //window.history.replaceState({}, '', '/home');
+                    showView('error-page-view');
+                    break;
+                    
             }
 
             // Show navbar only after setting up the view
