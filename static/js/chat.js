@@ -249,7 +249,6 @@ function loadChatView() {
      */
     function loadChatHistory() {
         if (!selectedUser) {
-            console.warn("No user selected for chat.");
             return;
         }
     
@@ -271,6 +270,7 @@ function loadChatView() {
                     allMessagesLoaded = true;
                 }
                 chatMessages = messages.concat(chatMessages);
+                chatMessages.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
                 offset += limit;
                 renderChatMessages();
     
@@ -384,7 +384,6 @@ function loadChatView() {
      */
     function handleScroll() {
         if (!selectedUser) {
-            console.warn("No user selected for chat.");
             return;
         }
     
