@@ -95,18 +95,20 @@ func GetAllUsers(db *sql.DB) ([]structs.User, error) {
     return users, nil
 }
 
+// Database/user.go
+
 func GetLastMessageTime(db *sql.DB, userID int, otherUserID int) (int64, error) {
-    var lastMessageTime time.Time
+    var lastMessageTime sql.NullInt64
     err := db.QueryRow(`
-        SELECT MAX(created_at)
+        SELECT MAX(strftime('%s', created_at))
         FROM messages
         WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)`,
         userID, otherUserID, otherUserID, userID).Scan(&lastMessageTime)
-    if err != nil {
-        if err == sql.ErrNoRows {
-            return 0, nil // No messages between users
-        }
+    if err != nil && err != sql.ErrNoRows {
         return 0, err
     }
-    return lastMessageTime.Unix(), nil
+    if lastMessageTime.Valid {
+        return lastMessageTime.Int64, nil
+    }
+    return 0, nil // No messages exist between users
 }

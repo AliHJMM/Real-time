@@ -44,3 +44,7 @@ func CreateSession(w http.ResponseWriter, userID int) {
         Secure:   false, // Set to true if using HTTPS
     })
 }
+
+func InitSessionManagement() {
+    OnlineUsers = make(map[int]bool)
+}

@@ -80,7 +80,9 @@ function loadChatView() {
         };
 
         ws.onmessage = function (event) {
+            console.log('WebSocket message received:', event.data);
             const message = JSON.parse(event.data);
+            console.log('Parsed message:', message);
 
             if (message.sender_id === 0) {
                 // System message (error or notification)
@@ -88,13 +90,49 @@ function loadChatView() {
                 return;
             }
 
+            // Determine who the other user is
+            const otherUserID = message.sender_id === currentUserID ? message.receiver_id : message.sender_id;
+            console.log('Current User ID:', currentUserID);
+            console.log('Message Sender ID:', message.sender_id);
+            console.log('Message Receiver ID:', message.receiver_id);
+            console.log('Other User ID:', otherUserID);
+
+            // Attempt to find the user in the users array
+            const userToUpdate = users.find(user => user.id === otherUserID);
+            console.log('User to Update:', userToUpdate);
+
+            if (!userToUpdate) {
+                // If the user is not in the list, fetch the users again
+                console.log('User not found in users array. Fetching users again.');
+                fetchUsers();
+                return;
+            }
+
+          // Update the lastMessageTime for the user
+const timestamp = message.created_at * 1000; // Convert to milliseconds
+if (isNaN(timestamp)) {
+    console.error('Invalid date format in message.created_at:', message.created_at);
+} else {
+    userToUpdate.lastMessageTime = timestamp / 1000; // Keep in seconds
+    console.log('Updated lastMessageTime:', userToUpdate.lastMessageTime);
+}
+
+
+            // Optionally, update the user's online status
+            userToUpdate.online = true;
+
+            // Re-sort and re-render the users list to reflect the new order
+            renderUsers();
+
+            // Update chat messages if the conversation is open
             if (selectedUser && (message.sender_id === selectedUser.id || message.receiver_id === selectedUser.id)) {
                 chatMessages.push(message);
                 renderChatMessages(true);
             }
         };
 
-        ws.onclose = function () {
+        ws.onclose = function (event) {
+            console.log('WebSocket connection closed:', event);
             console.log('WebSocket connection closed, retrying in 5 seconds...');
             setTimeout(setupWebSocket, 5000);
         };
@@ -115,15 +153,39 @@ function loadChatView() {
             user.username.toLowerCase().includes(searchTerm)
         );
 
-        // Sort users by last message timestamp or alphabetically
-        filteredUsers.sort((a, b) => {
-            const aLastMsg = a.lastMessageTime || 0;
-            const bLastMsg = b.lastMessageTime || 0;
-            if (aLastMsg !== bLastMsg) {
-                return bLastMsg - aLastMsg; // Descending order
-            }
-            return a.username.localeCompare(b.username);
-        });
+        // Console log before sorting
+        console.log('Users before sorting:', filteredUsers.map(u => ({
+            id: u.id,
+            username: u.username,
+            lastMessageTime: u.lastMessageTime
+        })));
+
+      // Sort users by last message timestamp or alphabetically
+// Sort users by online status, then last message timestamp, then alphabetically
+filteredUsers.sort((a, b) => {
+    // Online users come first
+    if (a.online && !b.online) return -1;
+    if (!a.online && b.online) return 1;
+
+    // Both users are either online or offline
+    const aLastMsg = a.lastMessageTime || 0;
+    const bLastMsg = b.lastMessageTime || 0;
+
+    if (aLastMsg !== bLastMsg) {
+        return bLastMsg - aLastMsg; // Descending order
+    }
+
+    // If lastMessageTime is the same (or zero), sort alphabetically
+    return a.username.localeCompare(b.username);
+});
+
+
+        // Console log after sorting
+        console.log('Users after sorting:', filteredUsers.map(u => ({
+            id: u.id,
+            username: u.username,
+            lastMessageTime: u.lastMessageTime
+        })));
 
         filteredUsers.forEach(user => {
             const li = document.createElement('li');

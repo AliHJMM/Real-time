@@ -1,3 +1,5 @@
+// handlers/onlineStatus.go
+
 package handlers
 
 import (
@@ -29,13 +31,21 @@ func OnlineUsersAPIHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
     sessions.Mutex.Lock()
     for _, user := range users {
+        // Skip the current user
+        if user.ID == userID {
+            continue
+        }
+
         // Set the online status
         _, isOnline := sessions.OnlineUsers[user.ID]
         user.Online = isOnline
 
         // Get the last message time
         lastMessageTime, err := Database.GetLastMessageTime(db, userID, user.ID)
-        if err == nil {
+        if err != nil {
+            // Log the error if needed
+            user.LastMessageTime = 0
+        } else {
             user.LastMessageTime = lastMessageTime
         }
 

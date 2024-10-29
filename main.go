@@ -1,3 +1,5 @@
+// main.go
+
 package main
 
 import (
@@ -7,8 +9,8 @@ import (
     "log"
     "net/http"
     "os"
-
     "talknet/server/handlers"
+    "talknet/server/sessions"
 
     _ "github.com/mattn/go-sqlite3" // SQLite driver
 )
@@ -54,6 +56,9 @@ func main() {
 
     // Ensure database is closed when main function exits
     defer database.Close()
+
+    // Initialize the session management
+    sessions.InitSessionManagement()
 
     // Initialize the database instance in the WebSocket handler
     handlers.InitDB(database)

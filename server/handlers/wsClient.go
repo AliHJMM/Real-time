@@ -1,3 +1,5 @@
+// handlers/wsClient.go
+
 package handlers
 
 import (
@@ -161,11 +163,21 @@ func SaveMessageToDB(message *structs.Message) error {
     }
     message.ID = int(messageID)
 
-    // Set the CreatedAt timestamp
-    message.CreatedAt = time.Now()
+    // Fetch the CreatedAt timestamp as Unix timestamp
+    var createdAtUnix int64
+    err = db.QueryRow("SELECT strftime('%s', created_at) FROM messages WHERE id = ?", messageID).Scan(&createdAtUnix)
+    if err != nil {
+        return err
+    }
+
+    // Set the CreatedAt field
+    message.CreatedAt = time.Unix(createdAtUnix, 0)
+
+    log.Printf("Message saved with ID: %d CreatedAt: %s", message.ID, message.CreatedAt.Format(time.RFC3339))
 
     return nil
 }
+
 
 // IsUserOnline checks if a user is online.
 func IsUserOnline(userID int) bool {
