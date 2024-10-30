@@ -1,3 +1,5 @@
+// sessions/createSession.go
+
 package sessions
 
 import (
@@ -39,9 +41,9 @@ func CreateSession(w http.ResponseWriter, userID int) {
         Value:    sessionID,
         Path:     "/",
         HttpOnly: true,
-        Secure:   false, // Set to true if using HTTPS
+        Secure:   true, // Set to true in production (requires HTTPS)
+        SameSite: http.SameSiteStrictMode,
     })
-    
 }
 
 func InitSessionManagement() {

@@ -2,27 +2,40 @@ package Database
 
 import (
 	"database/sql"
+	"fmt"
 	"talknet/structs"
-	"time"
 )
 
 // CreateUser inserts a new user into the database.
 func CreateUser(db *sql.DB, username, email, password, firstName, lastName string, age int, gender string) error {
-	_, err := db.Exec(`
-			INSERT INTO users (username, email, password, first_name, last_name, age, gender, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			username, email, password, firstName, lastName, age, gender, time.Now())
-	return err
+    query := `
+        INSERT INTO users (username, email, password, first_name, last_name, age, gender)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `
+    _, err := db.Exec(query, username, email, password, firstName, lastName, age, gender)
+    if err != nil {
+        fmt.Println("Error inserting user:", err)
+        return err
+    }
+    return nil
 }
 
 // GetUserByUsername retrieves a user by username.
 
+// GetUserByUsername retrieves a user by their username.
 func GetUserByUsername(db *sql.DB, username string) (structs.User, error) {
-	row := db.QueryRow("SELECT id, username, email, password, created_at FROM users WHERE username = ?", username)
-
-	var user structs.User
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt)
-	return user, err
+    var user structs.User
+    query := `
+        SELECT id, username, email, password, first_name, last_name, age, gender, created_at
+        FROM users
+        WHERE username = ?
+    `
+    row := db.QueryRow(query, username)
+    err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age, &user.Gender, &user.CreatedAt)
+    if err != nil {
+        return user, err
+    }
+    return user, nil
 }
 
 // function to validate username
@@ -69,10 +82,18 @@ func GetUsername(db *sql.DB, id int) (string, error) {
 }
 
 func GetUserByEmail(db *sql.DB, email string) (structs.User, error) {
-	row := db.QueryRow("SELECT id, username, email, password, first_name, last_name, age, gender, created_at FROM users WHERE email = ?", email)
-	var user structs.User
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age, &user.Gender, &user.CreatedAt)
-	return user, err
+    var user structs.User
+    query := `
+        SELECT id, username, email, password, first_name, last_name, age, gender, created_at
+        FROM users
+        WHERE email = ?
+    `
+    row := db.QueryRow(query, email)
+    err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age, &user.Gender, &user.CreatedAt)
+    if err != nil {
+        return user, err
+    }
+    return user, nil
 }
 
 // GetAllUsers retrieves all users from the database.

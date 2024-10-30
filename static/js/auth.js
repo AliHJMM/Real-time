@@ -1,4 +1,4 @@
-// auth.js
+// static/js/auth.js
 
 function initAuth() {
     /**
@@ -11,6 +11,20 @@ function initAuth() {
             const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value.trim();
 
+            // Frontend Validation
+            const errorMessage = document.getElementById('login-error-message');
+            errorMessage.textContent = ''; // Clear previous errors
+
+            if (username.length > 30) {
+                errorMessage.textContent = 'Username or Email cannot exceed 30 characters.';
+                return;
+            }
+
+            if (password.length > 20) {
+                errorMessage.textContent = 'Password cannot exceed 20 characters.';
+                return;
+            }
+
             fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -22,14 +36,14 @@ function initAuth() {
                         window.history.replaceState({}, '', '/home');
                         handleRoute();
                     } else {
-                        response.text().then(text => {
-                            document.getElementById('login-error-message').textContent = 'Invalid Username or Password';
+                        return response.text().then(text => {
+                            errorMessage.textContent = 'Invalid Username or Password.';
                         });
                     }
                 })
                 .catch(error => {
                     console.error('Error during login:', error);
-                    document.getElementById('login-error-message').textContent = 'An error occurred during login.';
+                    errorMessage.textContent = 'An unexpected error occurred. Please try again later.';
                 });
         });
 
@@ -58,20 +72,59 @@ function initAuth() {
     if (registerForm) {
         registerForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            const email = document.getElementById('register-email').value.trim();
-            const password = document.getElementById('register-password').value.trim();
             const firstName = document.getElementById('register-first-name').value.trim();
             const lastName = document.getElementById('register-last-name').value.trim();
             const age = parseInt(document.getElementById('register-age').value.trim());
-            const gender = document.getElementById('register-gender').value.trim();
-            const username=document.getElementById('register-nickname').value.trim();
+            const gender = document.getElementById('register-gender').value;
+            const nickname = document.getElementById('register-nickname').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+
+            // Frontend Validation
+            const errorMessage = document.getElementById('register-error-message');
+            errorMessage.textContent = ''; // Clear previous errors
+
+            if (firstName.length > 20) {
+                errorMessage.textContent = 'First Name cannot exceed 20 characters.';
+                return;
+            }
+
+            if (lastName.length > 20) {
+                errorMessage.textContent = 'Last Name cannot exceed 20 characters.';
+                return;
+            }
+
+            if (isNaN(age) || age <= 0 || age > 999) {
+                errorMessage.textContent = 'Age must be a positive number up to 999.';
+                return;
+            }
+
+            if (!['Male', 'Female'].includes(gender)) {
+                errorMessage.textContent = 'Please select a valid gender.';
+                return;
+            }
+
+            if (nickname.length > 20) {
+                errorMessage.textContent = 'Nickname cannot exceed 20 characters.';
+                return;
+            }
+
+            if (email.length > 30) {
+                errorMessage.textContent = 'Email cannot exceed 30 characters.';
+                return;
+            }
+
+            if (password.length > 20) {
+                errorMessage.textContent = 'Password cannot exceed 20 characters.';
+                return;
+            }
 
             fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({   
-                     username:username,
+                     username: nickname,
                     email: email,
                     password: password,
                     first_name: firstName,
@@ -83,17 +136,18 @@ function initAuth() {
                 .then(response => {
                     if (response.status === 201) {
                         // Successfully registered
+                        registerForm.reset();
                         window.history.replaceState({}, '', '/login');
                         handleRoute();
                     } else {
-                        response.text().then(text => {
-                            document.getElementById('register-error-message').textContent = text;
+                        return response.text().then(text => {
+                            errorMessage.textContent = text || 'Failed to register. Please try again.';
                         });
                     }
                 })
                 .catch(error => {
                     console.error('Error during registration:', error);
-                    document.getElementById('register-error-message').textContent = 'An error occurred during registration.';
+                    errorMessage.textContent = 'An unexpected error occurred. Please try again later.';
                 });
         });
 

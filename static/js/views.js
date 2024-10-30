@@ -3,8 +3,20 @@
 function showView(viewId) {
     // Hide all views
     document.querySelectorAll('.view').forEach(function (view) {
-        view.style.display = 'none';
+        if (view.style.display !== 'none') {
+            // If the view is currently visible, reset its forms
+            const forms = view.querySelectorAll('form');
+            forms.forEach(form => form.reset());
+
+            // Also clear any error messages
+            const errorMessages = view.querySelectorAll('[id$="-error-message"], [id$="-error"]');
+            errorMessages.forEach(msg => { if (msg) msg.textContent = ''; });
+
+            // Finally, hide the view
+            view.style.display = 'none';
+        }
     });
+
     // Show the selected view
     const selectedView = document.getElementById(viewId);
     if (selectedView) {
