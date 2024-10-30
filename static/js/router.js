@@ -69,7 +69,6 @@ function handleRoute() {
                     break;
                 default:
                     // Redirect unknown routes to home
-                    //window.history.replaceState({}, '', '/home');
                     showView('error-page-view');
                     break;
                     

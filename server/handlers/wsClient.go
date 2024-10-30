@@ -5,6 +5,7 @@ package handlers
 import (
     "database/sql"
     "encoding/json"
+    "errors"
     "log"
     "net/http"
     "time"
@@ -34,8 +35,6 @@ func InitDB(database *sql.DB) {
 }
 
 // ServeWs handles WebSocket requests from the peer.
-// handlers/wsClient.go
-
 func ServeWs(w http.ResponseWriter, r *http.Request) {
     // Authenticate the user
     userID, isLoggedIn := sessions.GetSessionUserID(r)
@@ -66,12 +65,7 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
     go client.writePump()
 }
 
-
 // readPump pumps messages from the WebSocket connection to the hub.
-// handlers/wsClient.go
-
-// handlers/wsClient.go
-
 func (c *Client) readPump() {
     defer func() {
         HubInstance.unregister <- c
@@ -92,11 +86,31 @@ func (c *Client) readPump() {
         err = json.Unmarshal(messageData, &message)
         if err != nil {
             log.Println("Unmarshal error:", err)
+            // Optionally, send an error message back to the client
+            systemMessage := structs.Message{
+                SenderID:   0, // System message
+                ReceiverID: c.userID,
+                Content:    "Invalid message format.",
+                CreatedAt:  time.Now(),
+            }
+            c.send <- systemMessage
             continue
         }
 
         // Set the sender ID to the current client
         message.SenderID = c.userID
+
+        // Validate message length
+        if len(message.Content) > 50 {
+            systemMessage := structs.Message{
+                SenderID:   0, // System message
+                ReceiverID: c.userID,
+                Content:    "Cannot send message. The content exceeds 50 characters.",
+                CreatedAt:  time.Now(),
+            }
+            c.send <- systemMessage
+            continue
+        }
 
         // Check if the recipient is online
         if !IsUserOnline(message.ReceiverID) {
@@ -115,6 +129,14 @@ func (c *Client) readPump() {
         err = SaveMessageToDB(&message)
         if err != nil {
             log.Println("Failed to save message:", err)
+            // Optionally, notify the sender about the failure
+            systemMessage := structs.Message{
+                SenderID:   0, // System message
+                ReceiverID: c.userID,
+                Content:    "Failed to send your message. Please try again.",
+                CreatedAt:  time.Now(),
+            }
+            c.send <- systemMessage
             continue
         }
 
@@ -122,12 +144,6 @@ func (c *Client) readPump() {
         HubInstance.broadcast <- message
     }
 }
-
-
-
-
-// writePump remains unchanged
-
 
 // writePump pumps messages from the hub to the WebSocket connection.
 func (c *Client) writePump() {
@@ -163,6 +179,10 @@ func (c *Client) writePump() {
 
 // SaveMessageToDB saves a message to the database and updates the message struct with the ID and timestamp.
 func SaveMessageToDB(message *structs.Message) error {
+    if len(message.Content) > 50 {
+        return errors.New("Message cannot exceed 50 characters.")
+    }
+
     result, err := db.Exec("INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
         message.SenderID, message.ReceiverID, message.Content)
     if err != nil {
@@ -190,7 +210,6 @@ func SaveMessageToDB(message *structs.Message) error {
 
     return nil
 }
-
 
 // IsUserOnline checks if a user is online.
 func IsUserOnline(userID int) bool {

@@ -30,6 +30,7 @@ function loadChatView() {
     const chatMessagesContainer = document.getElementById('chat-messages');
     const newMessageInput = document.getElementById('chat-new-message-input');
     const sendButton = document.getElementById('chat-send-button');
+    const charCount = document.getElementById('chat-char-count');
 
     // Initialize the chat by fetching current user ID and users list
     fetchCurrentUserID().then(() => {
@@ -62,8 +63,6 @@ function loadChatView() {
                 showView('login-view');
             });
     }
-    
-    
 
     /**
      * Fetch the list of online users from the server.
@@ -131,7 +130,6 @@ function loadChatView() {
             console.error('WebSocket error:', error);
         };
     }
-    
 
     /**
      * Render the list of users in the chat interface.
@@ -217,7 +215,6 @@ function loadChatView() {
             onlineText.textContent = onlineUsersCount !== 1 ? 's' : '';
         }
     }
-    
 
     /**
      * Handle search functionality to filter users.
@@ -286,8 +283,16 @@ function loadChatView() {
             });
     }
     
-    
-
+    /**
+     * Inserts line breaks into a string every `maxChars` characters.
+     * @param {string} text - The original message text.
+     * @param {number} maxChars - The maximum number of characters per line.
+     * @returns {string} - The formatted text with line breaks.
+     */
+    function insertLineBreaks(text, maxChars) {
+        const regex = new RegExp(`.{1,${maxChars}}`, 'g');
+        return text.match(regex).join('<br>');
+    }
 
     /**
      * Render chat messages in the chat container.
@@ -300,19 +305,20 @@ function loadChatView() {
             messageDiv.className = `flex ${
                 message.sender_id === currentUserID ? 'justify-end' : 'justify-start'
             } mb-4`;
-    
+
             const messageBubble = document.createElement('div');
             messageBubble.className = `max-w-[70%] p-3 rounded-lg ${
                 message.sender_id === currentUserID ? 'bg-sky-500 text-white' : 'bg-gray-200'
-            }`;
-    
+            } message-content`; // Added 'message-content' class
+
             const senderP = document.createElement('p');
             senderP.className = 'text-sm font-semibold mb-1';
             senderP.textContent = message.sender_id === currentUserID ? 'You' : selectedUser.username;
-    
+
             const contentP = document.createElement('p');
-            contentP.textContent = message.content;
-    
+            contentP.className = 'message-text';
+            contentP.innerHTML = insertLineBreaks(message.content, 15);
+
             const timeP = document.createElement('p');
             timeP.className = 'text-xs text-right mt-1 opacity-70';
             const date = new Date(message.created_at);
@@ -320,20 +326,19 @@ function loadChatView() {
                 hour: '2-digit',
                 minute: '2-digit',
             })}`;
-    
+
             messageBubble.appendChild(senderP);
             messageBubble.appendChild(contentP);
             messageBubble.appendChild(timeP);
             messageDiv.appendChild(messageBubble);
             chatMessagesContainer.appendChild(messageDiv);
         });
-    
+
         if (scrollToBottom) {
             // Scroll to bottom
             chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
         }
     }
-    
 
     /**
      * Handle sending a new message.
@@ -343,31 +348,38 @@ function loadChatView() {
             console.error("No user selected for chat. selectedUser is:", selectedUser);
             return;
         }
-    
+
         const messageContent = newMessageInput.value.trim();
+        if (messageContent.length === 0) {
+            displaySystemMessage("Cannot send an empty message.");
+            return;
+        }
+
+        if (messageContent.length > 50) {
+            displaySystemMessage("Message cannot exceed 50 characters.");
+            return;
+        }
+
         if (messageContent && ws && ws.readyState === WebSocket.OPEN) {
             if (!selectedUser.online) {
                 displaySystemMessage("Cannot send message. The user is offline.");
                 return;
             }
-    
+
             const messageObj = {
                 content: messageContent,
                 receiver_id: selectedUser.id,
                 sender_id: currentUserID,
                 created_at: new Date().toISOString()
             };
-    
+
             ws.send(JSON.stringify(messageObj));
             chatMessages.push(messageObj);
-            renderChatMessages(true);
-    
+            renderChatMessages(true);  // Scroll to bottom on new message
+
             newMessageInput.value = '';
         }
     }
-    
-    
-    
 
     /**
      * Handle the back button to return to the user list view.
@@ -396,43 +408,36 @@ function loadChatView() {
      * Update the chat interface based on the selected user's online status.
      * Disables the message input and send button if the user is offline.
      */
-    // static/js/chat.js
-
-function updateChatInterface() {
-    const offlineMessage = document.getElementById('chat-offline-message');
-    if (selectedUser && !selectedUser.online) {
-        newMessageInput.disabled = true;
-        sendButton.disabled = true;
-        sendButton.classList.add('opacity-50', 'cursor-not-allowed');
-        offlineMessage.classList.remove('hidden');
-    } else {
-        newMessageInput.disabled = false;
-        sendButton.disabled = false;
-        sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        if (offlineMessage) {
-            offlineMessage.classList.add('hidden');
+    function updateChatInterface() {
+        const offlineMessage = document.getElementById('chat-offline-message');
+        if (selectedUser && !selectedUser.online) {
+            newMessageInput.disabled = true;
+            sendButton.disabled = true;
+            sendButton.classList.add('opacity-50', 'cursor-not-allowed');
+            offlineMessage.classList.remove('hidden');
+        } else {
+            newMessageInput.disabled = false;
+            sendButton.disabled = false;
+            sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            if (offlineMessage) {
+                offlineMessage.classList.add('hidden');
+            }
         }
     }
-}
-
 
     /**
- * Display system messages within the chat interface.
- * @param {string} content - The system message content to display.
- */
-// static/js/chat.js
-
-function displaySystemMessage(content) {
-    const systemMessageDiv = document.createElement('div');
-    systemMessageDiv.className = 'flex justify-center mb-4';
-    systemMessageDiv.innerHTML = `
-        <span class="text-sm text-red-500 italic">${content}</span>
-    `;
-    chatMessagesContainer.appendChild(systemMessageDiv);
-    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-}
-
-
+     * Display system messages within the chat interface.
+     * @param {string} content - The system message content to display.
+     */
+    function displaySystemMessage(content) {
+        const systemMessageDiv = document.createElement('div');
+        systemMessageDiv.className = 'flex justify-center mb-4';
+        systemMessageDiv.innerHTML = `
+            <span class="text-sm text-red-500 italic">${content}</span>
+        `;
+        chatMessagesContainer.appendChild(systemMessageDiv);
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
 
     // Event Listeners
     searchButton.addEventListener('click', handleSearch);
@@ -445,6 +450,14 @@ function displaySystemMessage(content) {
         }
     });
     chatMessagesContainer.addEventListener('scroll', debounce(handleScroll, 300));
+
+    // Character Count Feedback
+    if (newMessageInput && charCount) {
+        newMessageInput.addEventListener('input', function () {
+            const remaining = 50 - newMessageInput.value.length;
+            charCount.textContent = `${remaining} character${remaining !== 1 ? 's' : ''} remaining`;
+        });
+    }
 
     // Initial Render
     renderUsers();
@@ -474,3 +487,24 @@ document.addEventListener('DOMContentLoaded', function () {
         loadChatView();
     }
 });
+
+/**
+ * Function to update the chat interface based on the selected user's online status.
+ * Added to ensure proper message input handling.
+ */
+function updateChatInterface() {
+    const offlineMessage = document.getElementById('chat-offline-message');
+    if (selectedUser && !selectedUser.online) {
+        newMessageInput.disabled = true;
+        sendButton.disabled = true;
+        sendButton.classList.add('opacity-50', 'cursor-not-allowed');
+        offlineMessage.classList.remove('hidden');
+    } else {
+        newMessageInput.disabled = false;
+        sendButton.disabled = false;
+        sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        if (offlineMessage) {
+            offlineMessage.classList.add('hidden');
+        }
+    }
+}
