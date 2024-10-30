@@ -35,7 +35,7 @@ function loadPostDetails(postId) {
                         commentDiv.className = 'bg-gray-100 p-4 rounded';
                         commentDiv.innerHTML = `
                             <p class="font-semibold">${comment.username} <span class="text-gray-600 text-sm">on ${new Date(comment.createdAt).toLocaleString()}</span></p>
-                            <p>${comment.content}</p>
+                            <p class="post-content">${comment.content}</p>
                         `;
                         commentsContainer.appendChild(commentDiv);
                     });

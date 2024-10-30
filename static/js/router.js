@@ -14,11 +14,10 @@ function handleRoute() {
             window.history.replaceState({}, '', '/login');
             showView('login-view');
         } else if (isAuthenticated && (path === '/login' || path === '/register')) {
-            // Redirect authenticated users away from login/register
-            console.log('Already authenticated, redirecting to home');
             window.history.replaceState({}, '', '/home');
             showView('home-view');
             loadHome();
+            showNavBar();
         } else {
             // Handle different routes for authenticated users
             switch (path) {

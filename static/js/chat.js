@@ -447,11 +447,12 @@ function loadChatView() {
     newMessageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             handleSendMessage();
+            charCount.textContent = `50 characters remaining`;
         }
     });
     chatMessagesContainer.addEventListener('scroll', debounce(handleScroll, 300));
 
-    // Character Count Feedback
+    // Character Count 
     if (newMessageInput && charCount) {
         newMessageInput.addEventListener('input', function () {
             const remaining = 50 - newMessageInput.value.length;

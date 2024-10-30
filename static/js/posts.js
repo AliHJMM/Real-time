@@ -67,11 +67,11 @@ function createPostCard(post) {
   card.setAttribute("data-post-id", post.id);
 
   const header = document.createElement("div");
-  header.className = "flex items-center space-x-4 mb-2";
+  header.className = "flex items-center space-x-4 mb-2 post-content";
   header.innerHTML = `
-   <img src="https://via.placeholder.com/40" alt="User Avatar" class="rounded-full h-10 w-10">
-    <div>
-        <h3 class="font-semibold text-lg text-sky-800"> ${post.title} </h3>
+   <img src="/static/images/Profile.png" alt="User Avatar" class="rounded-full h-10 w-10">
+    <div class="post-content">
+        <h3 class="font-semibold text-lg text-sky-800 post-content"> ${post.title} </h3>
         <!-- Updated Paragraph with Username -->
         <p class="text-sky-600 text-sm">by <span class="font-semibold">${post.username}</span> • ${new Date(
             post.createdAt
@@ -83,7 +83,7 @@ function createPostCard(post) {
 
       // Post Info
   const postContent = document.createElement("p");
-  postContent.className = "text-gray-600 mb-4";
+  postContent.className = "post-content text-gray-600 mb-4";
   postContent.innerHTML = post.content;
   card.appendChild(postContent);
 
