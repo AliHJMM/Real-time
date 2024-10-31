@@ -2,7 +2,7 @@ package Database
 
 import (
 	"database/sql"
-	"talknet/structs" // Adjust import path as needed
+	"talknet/structs"
 	"time"
 )
 
@@ -111,7 +111,7 @@ func GetLikedPosts(db *sql.DB, userID int) ([]structs.Post, error) {
 					&post.Title,
 					&post.Content,
 					&post.CreatedAt,
-					&post.UpdatedAt, // Added this line
+					&post.UpdatedAt,
 			)
 			if err != nil {
 					return nil, err

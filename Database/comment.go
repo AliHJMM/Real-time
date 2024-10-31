@@ -2,7 +2,7 @@ package Database
 
 import (
 	"database/sql"
-	"talknet/structs" // Adjust import path as needed
+	"talknet/structs"
 	"time"
 )
 

@@ -1,5 +1,3 @@
-// handlers/onlineStatus.go
-
 package handlers
 
 import (
@@ -31,7 +29,7 @@ func OnlineUsersAPIHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
     sessions.Mutex.Lock()
     for _, user := range users {
-        // Skip the current user
+        // Skip the current 
         if user.ID == userID {
             continue
         }

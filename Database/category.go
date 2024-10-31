@@ -2,7 +2,7 @@ package Database
 
 import (
 	"database/sql"
-	"talknet/structs" // Adjust import path as needed
+	"talknet/structs"
 	"time"
 )
 
@@ -20,13 +20,13 @@ func GetCategoryByID(db *sql.DB, id int) (structs.Category, error) {
 	return category, err
 }
 
-// Corrected function name
+// GetAllCategories retrieves all categories
 func GetAllCategories(db *sql.DB) ([]structs.Category, error) {
 	rows, err := db.Query("SELECT id, name FROM categories")
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close() // Move defer close to after error check
+	defer rows.Close()
 
 	var categories []structs.Category
 	for rows.Next() {

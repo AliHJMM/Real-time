@@ -1,5 +1,3 @@
-// handlers/wsClient.go
-
 package handlers
 
 import (
@@ -17,7 +15,7 @@ import (
 
 var upgrader = websocket.Upgrader{
     CheckOrigin: func(r *http.Request) bool {
-        return true // Adjust this in production
+        return true
     },
 }
 

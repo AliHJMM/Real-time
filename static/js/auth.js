@@ -1,9 +1,6 @@
-// static/js/auth.js
 
 function initAuth() {
-    /**
-     * Handle Login Form Submission
-     */
+   
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', function (e) {
@@ -65,9 +62,7 @@ function initAuth() {
         }
     }
 
-    /**
-     * Handle Register Form Submission
-     */
+   
     const registerForm = document.getElementById('register-form');
     if (registerForm) {
         registerForm.addEventListener('submit', function (e) {

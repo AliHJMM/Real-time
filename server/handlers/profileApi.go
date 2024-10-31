@@ -177,7 +177,7 @@ func ProfileAPIHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
         LikedPosts   []structs.PostData `json:"likedPosts"`
         IsHisProfile bool               `json:"isHisProfile"`
         Username     string             `json:"username"`
-        UserID       int                `json:"userID"` // Added this line
+        UserID       int                `json:"userID"`
     }{
         MyPosts:      myPostDataList,
         LikedPosts:   likedPostDataList,

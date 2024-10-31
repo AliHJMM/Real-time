@@ -1,4 +1,3 @@
-// posts.js
 
 function loadHome() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -86,40 +85,6 @@ function createPostCard(post) {
   postContent.className = "post-content text-gray-600 mb-4";
   postContent.innerHTML = post.content;
   card.appendChild(postContent);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
 
   // Post Categories
   const categoriesDiv = document.createElement("div");

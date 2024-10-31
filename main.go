@@ -1,5 +1,3 @@
-// main.go
-
 package main
 
 import (
@@ -12,13 +10,13 @@ import (
     "talknet/server/handlers"
     "talknet/server/sessions"
 
-    _ "github.com/mattn/go-sqlite3" // SQLite driver
+    _ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
     // Open a connection to the database
-    dbPath := "./talknet.db"       // Path to your SQLite database file
-    sqlFilePath := "./talknet.sql" // Path to your SQL file
+    dbPath := "./talknet.db"
+    sqlFilePath := "./talknet.sql" 
 
     var database *sql.DB
 

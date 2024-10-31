@@ -1,4 +1,3 @@
-// postDetails.js
 
 function loadPostDetails(postId) {
     fetch(`/api/post?post_id=${postId}`, { method: 'GET', credentials: 'include' })

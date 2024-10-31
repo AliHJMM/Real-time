@@ -1,14 +1,9 @@
-// static/js/main.js
 
 document.addEventListener('DOMContentLoaded', function () {
     
-    // Initialize the app
     handleRoute();
-
-    // Initialize authentication handlers
     initAuth();
 
-    // Set up event listeners
     window.addEventListener('popstate', handleRoute );
 
     // Use event delegation to capture clicks on dynamically added elements
@@ -32,9 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
-/**
- * Function to handle logout
- */
+
 function handleLogout() {
     console.log('Logout initiated');
     fetch('/api/logout', {

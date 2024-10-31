@@ -1,4 +1,3 @@
-// profile.js
 
 function loadProfile() {
     fetch('/api/profile', { method: 'GET', credentials: 'include' })

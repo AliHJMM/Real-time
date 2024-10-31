@@ -1,5 +1,3 @@
-// handlers/loginApi.go
-
 package handlers
 
 import (
@@ -28,7 +26,7 @@ func LoginAPIHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
     user, err := server.LoginUser(db, credentials.Username, credentials.Password)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusUnauthorized) // Send custom error message
+        http.Error(w, err.Error(), http.StatusUnauthorized)
         return
     }
     sessions.CreateSession(w, user.ID)

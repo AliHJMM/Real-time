@@ -36,9 +36,9 @@ func ChatHistoryHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Optional: Pagination parameters
+    //Pagination parameters
     limitStr := r.URL.Query().Get("limit")
-    limit := 20 // Default limit
+    limit := 20
     if limitStr != "" {
         limit, err = strconv.Atoi(limitStr)
         if err != nil || limit <= 0 {
@@ -48,7 +48,7 @@ func ChatHistoryHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
     }
 
     offsetStr := r.URL.Query().Get("offset")
-    offset := 0 // Default offset
+    offset := 0
     if offsetStr != "" {
         offset, err = strconv.Atoi(offsetStr)
         if err != nil || offset < 0 {

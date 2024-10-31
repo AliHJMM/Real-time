@@ -1,5 +1,3 @@
-// server/registerUser.go
-
 package server
 
 import (

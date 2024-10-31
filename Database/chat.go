@@ -1,5 +1,3 @@
-// Database/chat.go
-
 package Database
 
 import (

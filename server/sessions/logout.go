@@ -1,5 +1,3 @@
-// sessions/logout.go
-
 package sessions
 
 import (
@@ -28,7 +26,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
             Path:     "/",
             MaxAge:   -1,     // Deletes the cookie immediately
             HttpOnly: true,
-            Secure:   true, // Set to true in production (requires HTTPS)
+            Secure:   true,
             SameSite: http.SameSiteStrictMode,
         })
     }

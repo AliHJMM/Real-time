@@ -1,4 +1,3 @@
-// static/js/router.js
 
 function handleRoute() {
     const path = window.location.pathname;

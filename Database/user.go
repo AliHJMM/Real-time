@@ -20,8 +20,6 @@ func CreateUser(db *sql.DB, username, email, password, firstName, lastName strin
     return nil
 }
 
-// GetUserByUsername retrieves a user by username.
-
 // GetUserByUsername retrieves a user by their username.
 func GetUserByUsername(db *sql.DB, username string) (structs.User, error) {
     var user structs.User
@@ -115,8 +113,6 @@ func GetAllUsers(db *sql.DB) ([]structs.User, error) {
     }
     return users, nil
 }
-
-// Database/user.go
 
 func GetLastMessageTime(db *sql.DB, userID int, otherUserID int) (int64, error) {
     var lastMessageTime sql.NullInt64

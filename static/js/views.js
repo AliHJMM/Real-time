@@ -1,4 +1,3 @@
-// static/js/views.js
 
 function showView(viewId) {
     // Hide all views

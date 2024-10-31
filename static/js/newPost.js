@@ -1,4 +1,4 @@
-// newPost.js
+
 
 function loadNewPostView() {
     // Ensure the user is authenticated before fetching categories
@@ -28,7 +28,6 @@ function loadNewPostView() {
                     }
                 });
         } else {
-            // Redirect to login if not authenticated
             window.history.replaceState({}, '', '/login');
             showView('login-view');
         }

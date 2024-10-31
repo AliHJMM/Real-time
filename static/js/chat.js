@@ -1,4 +1,3 @@
-// static/js/chat.js
 
 /**
  * Function to initialize and handle the chat view.
@@ -17,7 +16,6 @@ function loadChatView() {
     let loadingMessages = false;
     let allMessagesLoaded = false;
 
-    // DOM Elements
     const usersList = document.getElementById('chat-users-list');
     const searchInput = document.getElementById('chat-search-input');
     const searchButton = document.getElementById('chat-search-button');
@@ -41,9 +39,7 @@ function loadChatView() {
     // Periodically fetch users to update their online status every 5 seconds
     setInterval(fetchUsers, 5000);
 
-    /**
-     * Fetch the current user's ID from the profile API.
-     */
+    
     function fetchCurrentUserID() {
         return fetch('/api/profile', { method: 'GET', credentials: 'include', cache: 'no-store' })
             .then(response => {
@@ -223,10 +219,7 @@ function loadChatView() {
         renderUsers();
     }
 
-    /**
-     * Handle user selection to open the chat with that user.
-     * @param {Object} user - The user object that was clicked.
-     */
+    
     function handleUserClick(user) {
         selectedUser = user;
         cardTitle.textContent = `Chat with ${user.username}`;
@@ -237,7 +230,6 @@ function loadChatView() {
         allMessagesLoaded = false;
         loadChatHistory();
     
-        // Update the chat interface based on the user's online status
         updateChatInterface();
     }
     
@@ -283,21 +275,13 @@ function loadChatView() {
             });
     }
     
-    /**
-     * Inserts line breaks into a string every `maxChars` characters.
-     * @param {string} text - The original message text.
-     * @param {number} maxChars - The maximum number of characters per line.
-     * @returns {string} - The formatted text with line breaks.
-     */
+    
     function insertLineBreaks(text, maxChars) {
         const regex = new RegExp(`.{1,${maxChars}}`, 'g');
         return text.match(regex).join('<br>');
     }
 
-    /**
-     * Render chat messages in the chat container.
-     * @param {boolean} scrollToBottom - Whether to scroll to the bottom after rendering.
-     */
+   
     function renderChatMessages(scrollToBottom = false) {
         chatMessagesContainer.innerHTML = '';
         chatMessages.forEach(message => {
@@ -425,10 +409,7 @@ function loadChatView() {
         }
     }
 
-    /**
-     * Display system messages within the chat interface.
-     * @param {string} content - The system message content to display.
-     */
+   
     function displaySystemMessage(content) {
         const systemMessageDiv = document.createElement('div');
         systemMessageDiv.className = 'flex justify-center mb-4';
@@ -464,13 +445,7 @@ function loadChatView() {
     renderUsers();
 }
 
-/**
- * Debounce function to limit the rate at which a function can fire.
- * Useful for optimizing performance on events like scrolling or resizing.
- * @param {Function} func - The function to debounce.
- * @param {number} wait - The delay in milliseconds.
- * @returns {Function} - The debounced function.
- */
+
 function debounce(func, wait) {
     let timeout;
     return function () {

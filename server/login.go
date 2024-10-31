@@ -1,5 +1,3 @@
-// server/login.go
-
 package server
 
 import (
