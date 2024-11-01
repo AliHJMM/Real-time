@@ -1,4 +1,3 @@
-
 function showView(viewId) {
     // Hide all views
     document.querySelectorAll('.view').forEach(function (view) {

@@ -139,13 +139,10 @@ function loadChatView() {
         function showNotification(message) {
             // Check if notifications are permitted
             if (Notification.permission === 'granted') {
-                // Optional: Check if the page is visible
                 if (document.hidden) {
                     const notification = new Notification(`New message from ${message.sender_name || 'Someone'}`, {
                         body: message.content || 'You have a new message.',
-                        // Optional: Add an icon
                         icon: '/static/images/notification-icon.png', // Replace with your icon path
-                        // Optional: Add a click handler to focus the window
                     });
         
                     notification.onclick = function () {
@@ -153,6 +150,8 @@ function loadChatView() {
                         this.close();
                     };
                 }
+            }else{
+                alert("not permetied")
             }
         }
 
@@ -195,7 +194,7 @@ function loadChatView() {
             const avatarDiv = document.createElement('div');
             avatarDiv.className = 'h-12 w-12 relative';
             const avatarImg = document.createElement('img');
-            avatarImg.src = 'https://via.placeholder.com/80';
+            avatarImg.src = '/static/images/Profile.png';
             avatarImg.alt = user.username;
             avatarImg.className = 'h-12 w-12 rounded-full';
             avatarDiv.appendChild(avatarImg);
@@ -255,6 +254,7 @@ function loadChatView() {
         userListView.classList.add('hidden');
         chatView.classList.remove('hidden');
         chatMessages = [];
+        chatMessagesContainer.innerHTML = ''; // Clear displayed messages
         offset = 0;
         allMessagesLoaded = false;
         loadChatHistory();

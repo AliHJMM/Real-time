@@ -1,3 +1,5 @@
+// main.go
+
 package main
 
 import (
@@ -7,6 +9,7 @@ import (
     "log"
     "net/http"
     "os"
+    "strings"
     "talknet/server/handlers"
     "talknet/server/sessions"
 
@@ -22,7 +25,6 @@ func main() {
 
     // Check if the database file exists
     if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-
         // Create a new database
         db, err := sql.Open("sqlite3", dbPath)
         if err != nil {
@@ -107,9 +109,40 @@ func main() {
         handlers.ServeWs(w, r)
     })
 
-    // Serve index.html for any non-API route
+    // Define a list of valid client-side routes
+    validRoutes := map[string]bool{
+        "/":             true,
+        "/login":        true,
+        "/register":     true,
+        "/home":         true,
+        "/profile":      true,
+        "/new-post":     true,
+        "/chat":         true,
+        "/post-details": true, // This will cover paths like /post-details?post_id=1
+    }
+
+    // Catch-all handler for client-side routes and 404
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        http.ServeFile(w, r, "static/pages/index.html")
+        path := r.URL.Path
+
+        // Check if the path is a valid route or a subpath (like /post-details?post_id=1)
+        isValid := false
+        for route := range validRoutes {
+            if path == route || strings.HasPrefix(path, route+"/") || strings.HasPrefix(path, route+"?") {
+                isValid = true
+                break
+            }
+        }
+
+        if isValid {
+            // Serve the SPA's index.html with 200 status
+            http.ServeFile(w, r, "static/pages/index.html")
+        } else {
+            // Set the status code to 404
+            w.WriteHeader(http.StatusNotFound)
+            // Serve the SPA's index.html
+            http.ServeFile(w, r, "static/pages/index.html")
+        }
     })
 
     // Start the server
