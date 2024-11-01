@@ -1,3 +1,4 @@
+
 function handleRoute() {
     const path = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
@@ -5,29 +6,6 @@ function handleRoute() {
 
     checkAuth().then(isAuthenticated => {
         console.log('User is authenticated:', isAuthenticated);
-
-        // Define the same validRoutes as on the server
-        const validRoutes = [
-            '/',
-            '/login',
-            '/register',
-            '/home',
-            '/profile',
-            '/new-post',
-            '/chat',
-            '/post-details'
-        ];
-
-        // Check if the path is valid
-        const isValid = validRoutes.some(route => {
-            return path === route || path.startsWith(route + '/');
-        });
-
-        if (!isValid) {
-            // Display the 404 error view within the SPA
-            showView('error-page-view');
-            return;
-        }
 
         if (!isAuthenticated && path !== '/login' && path !== '/register') {
             // Redirect to login if not authenticated
@@ -48,6 +26,7 @@ function handleRoute() {
                 case '/register':
                     showView('register-view');
                     break;
+                case '/':
                 case '/home':
                     showView('home-view');
                     loadHome();
@@ -87,9 +66,10 @@ function handleRoute() {
                     }
                     break;
                 default:
-                    // Show 404 error view within the SPA
+                    // Redirect unknown routes to home
                     showView('error-page-view');
                     break;
+                    
             }
 
             // Show navbar only after setting up the view

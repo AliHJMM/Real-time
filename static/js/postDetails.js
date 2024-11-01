@@ -7,11 +7,6 @@ function loadPostDetails(postId) {
                 window.history.replaceState({}, '', '/login');
                 showView('login-view');
                 throw new Error('Unauthorized');
-            }if (response.status === 404) {
-                // Explicitly handle 404 status here
-                window.history.pushState({}, '', '/error');
-                handleRoute();
-                throw new Error('Post not found');
             }
             if (!response.ok) {
                 throw new Error('Failed to fetch post details');
