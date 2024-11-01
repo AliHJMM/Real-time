@@ -112,6 +112,11 @@ function loadChatView() {
             if (selectedUser && message.sender_id === selectedUser.id) {
                 chatMessages.push(message);
                 renderChatMessages(true);  // true to scroll to bottom on new message
+            } else {
+                // Show notification for messages from other users
+                if(message.receiver_id == currentUserID) {
+                    showNotification(message); 
+                }
             }
         };
         
@@ -126,6 +131,30 @@ function loadChatView() {
             console.error('WebSocket error:', error);
         };
     }
+
+        /**
+     * Displays a desktop notification for a new message.
+     * @param {Object} message - The message object containing details about the new message.
+     */
+        function showNotification(message) {
+            // Check if notifications are permitted
+            if (Notification.permission === 'granted') {
+                // Optional: Check if the page is visible
+                if (document.hidden) {
+                    const notification = new Notification(`New message from ${message.sender_name || 'Someone'}`, {
+                        body: message.content || 'You have a new message.',
+                        // Optional: Add an icon
+                        icon: '/static/images/notification-icon.png', // Replace with your icon path
+                        // Optional: Add a click handler to focus the window
+                    });
+        
+                    notification.onclick = function () {
+                        window.focus();
+                        this.close();
+                    };
+                }
+            }
+        }
 
     /**
      * Render the list of users in the chat interface.

@@ -39,7 +39,7 @@ func CreateSession(w http.ResponseWriter, userID int) {
         Value:    sessionID,
         Path:     "/",
         HttpOnly: true,
-        Secure:   true,
+        Secure:   false,
         SameSite: http.SameSiteStrictMode,
     })
 }
