@@ -255,6 +255,7 @@ function loadChatView() {
         userListView.classList.add('hidden');
         chatView.classList.remove('hidden');
         chatMessages = [];
+        chatMessagesContainer.innerHTML = '';
         offset = 0;
         allMessagesLoaded = false;
         loadChatHistory();
