@@ -1,52 +1,53 @@
+// main.js
 
 document.addEventListener('DOMContentLoaded', function () {
-    
     handleRoute();
     initAuth();
 
-    window.addEventListener('popstate', handleRoute );
+    window.addEventListener('popstate', handleRoute);
 
-    // Use event delegation to capture clicks on dynamically added elements
+    // Logout Handler
     document.addEventListener('click', function (event) {
         if (event.target.closest('a[href="/logout"]')) {
             event.preventDefault();
             handleLogout();
+            event.stopPropagation(); // Prevent the event from reaching other handlers
         }
     });
 
-    // Handle navigation clicks without reloading the page
+    // Navigation Handler
     document.body.addEventListener('click', function (e) {
-        if (e.target.tagName === 'A' && e.target.getAttribute('href').startsWith('/')) {
+        const target = e.target;
+        if (
+            target.tagName === 'A' &&
+            target.getAttribute('href').startsWith('/') &&
+            target.getAttribute('href') !== '/logout' // Exclude the logout link
+        ) {
             e.preventDefault();
-            const href = e.target.getAttribute('href');
+            const href = target.getAttribute('href');
             window.history.pushState({}, '', href);
             handleRoute();
         }
     });
-   
-
 });
 
-
 function handleLogout() {
-    console.log('Logout initiated');
     fetch('/api/logout', {
         method: 'GET',
         credentials: 'include',
-        cache: 'no-store', // Ensure the request is not cached
+        cache: 'no-store',
     })
-    .then(response => {
-        console.log('Logout response:', response);
-        if (response.ok) {
-            console.log('Logout successful');
-            window.history.replaceState({}, '', '/login');
-            // Delay the authentication check slightly to ensure session invalidation
-            setTimeout(handleRoute, 100);
-        } else {
-            console.error('Logout failed.');
-        }
-    })
-    .catch(error => {
-        console.error('Error during logout:', error);
-    });
+        .then(response => {
+            console.log('Logout response:', response);
+            if (response.ok) {
+                console.log('Logout successful');
+                window.history.replaceState({}, '', '/login');
+                setTimeout(handleRoute, 100);
+            } else {
+                console.error('Logout failed.');
+            }
+        })
+        .catch(error => {
+            console.error('Error during logout:', error);
+        });
 }
