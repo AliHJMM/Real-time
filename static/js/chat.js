@@ -400,6 +400,7 @@ function loadChatView() {
      */
     function handleBack() {
         selectedUser = null;
+        newMessageInput.value = ""
         cardTitle.textContent = 'User Online Status';
         chatView.classList.add('hidden');
         userListView.classList.remove('hidden');
