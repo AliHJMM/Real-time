@@ -9,25 +9,26 @@ type ErrorData struct {
 
 // User represents a user in the forum.
 type User struct {
-	ID        int       `json:"id"`
-	Username string    `json:"username"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
-	Age       int       `json:"age"`
-	Gender    string    `json:"gender"`
-	CreatedAt time.Time `json:"created_at"`
-	Online    bool      `json:"online"` // Added this line
-	LastMessageTime int64    `json:"lastMessageTime"` // Unix timestamp
+	ID              int       `json:"id"`
+	Username        string    `json:"username"`
+	Email           string    `json:"email"`
+	Password        string    `json:"password"`
+	FirstName       string    `json:"first_name"`
+	LastName        string    `json:"last_name"`
+	Age             int       `json:"age"`
+	Gender          string    `json:"gender"`
+	CreatedAt       time.Time `json:"created_at"`
+	Online          bool      `json:"online"`          // Added this line
+	LastMessageTime int64     `json:"lastMessageTime"` // Unix timestamp
 }
 
 type Message struct {
 	ID         int       `json:"id"`
-    SenderID   int       `json:"sender_id"`
-    ReceiverID int       `json:"receiver_id"`
-    Content    string    `json:"content"`
-    CreatedAt  time.Time `json:"created_at"`
+	SenderID   int       `json:"sender_id"`
+	ReceiverID int       `json:"receiver_id"`
+	Content    string    `json:"content"`
+	CreatedAt  time.Time `json:"created_at"`
+	Type       string    `json:"type"` // "message", "typing", "stop_typing"
 }
 
 // Post represents a forum post.
@@ -58,14 +59,14 @@ type Like struct {
 	CommentID *int      `json:"comment_id,omitempty"` // Nullable for likes on posts
 	CreatedAt time.Time `json:"created_at"`
 }
+
 type Dislike struct {
 	ID        int       `json:"id"`
 	UserID    int       `json:"user_id"`
-	PostID    *int      `json:"post_id,omitempty"`    // Nullable for likes on comments
-	CommentID *int      `json:"comment_id,omitempty"` // Nullable for likes on posts
+	PostID    *int      `json:"post_id,omitempty"`    // Nullable for dislikes on comments
+	CommentID *int      `json:"comment_id,omitempty"` // Nullable for dislikes on posts
 	CreatedAt time.Time `json:"created_at"`
 }
-
 
 // Category represents a category for posts.
 type Category struct {
@@ -74,16 +75,15 @@ type Category struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-
 type PostData struct {
-	ID             int                `json:"id"`
-	Username       string             `json:"username"`
-	Title          string             `json:"title"`
-	Content        string             `json:"content"`
-	CreatedAt      string             `json:"createdAt"`
+	ID             int        `json:"id"`
+	Username       string     `json:"username"`
+	Title          string     `json:"title"`
+	Content        string     `json:"content"`
+	CreatedAt      string     `json:"createdAt"`
 	PostCategories []Category `json:"postCategories"`
-	LikeCount      int                `json:"likeCount"`
-	DislikeCount   int                `json:"dislikeCount"`
-	CommentCount   int                `json:"commentCount"`
-	Reaction       int                `json:"reaction"`
+	LikeCount      int        `json:"likeCount"`
+	DislikeCount   int        `json:"dislikeCount"`
+	CommentCount   int        `json:"commentCount"`
+	Reaction       int        `json:"reaction"`
 }

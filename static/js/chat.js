@@ -1,9 +1,3 @@
-
-/**
- * Function to initialize and handle the chat view.
- * Ensures users can view chat histories with both online and offline users,
- * while restricting message sending to online users only.
- */
 function loadChatView() {
     let users = [];
     let currentUserID = null;
@@ -15,6 +9,8 @@ function loadChatView() {
     let offset = 0;
     let loadingMessages = false;
     let allMessagesLoaded = false;
+    let typingTimeout = null;
+    let isTyping = false;
 
     const usersList = document.getElementById('chat-users-list');
     const searchInput = document.getElementById('chat-search-input');
@@ -29,6 +25,7 @@ function loadChatView() {
     const newMessageInput = document.getElementById('chat-new-message-input');
     const sendButton = document.getElementById('chat-send-button');
     const charCount = document.getElementById('chat-char-count');
+    let typingIndicatorElement = null; // Will be created dynamically
 
     // Initialize the chat by fetching current user ID and users list
     fetchCurrentUserID().then(() => {
@@ -39,7 +36,6 @@ function loadChatView() {
     // Periodically fetch users to update their online status every 5 seconds
     setInterval(fetchUsers, 5000);
 
-    
     function fetchCurrentUserID() {
         return fetch('/api/profile', { method: 'GET', credentials: 'include', cache: 'no-store' })
             .then(response => {
@@ -108,19 +104,29 @@ function loadChatView() {
             console.log("WebSocket message received:", event.data);
             const message = JSON.parse(event.data);
             
+            if (message.type === 'typing' || message.type === 'stop_typing') {
+                handleTypingNotification(message);
+                return;
+            }
+
             // If message is for the currently selected user, display it
-            if (selectedUser && message.sender_id === selectedUser.id) {
+            if (selectedUser && (message.sender_id === selectedUser.id || message.receiver_id === selectedUser.id)) {
                 chatMessages.push(message);
+
+                // **Hide typing indicator when a new message is received from the selected user**
+                if (message.sender_id === selectedUser.id) {
+                    hideTypingIndicator();
+                }
+
                 renderChatMessages(true);  // true to scroll to bottom on new message
             } else {
                 // Show notification for messages from other users
-                if(message.receiver_id == currentUserID) {
+                if (message.receiver_id == currentUserID) {
                     showNotification(message); 
                 }
             }
         };
         
-    
         ws.onclose = function (event) {
             console.log('WebSocket connection closed:', event);
             console.log('Attempting to reconnect in 5 seconds...');
@@ -132,29 +138,80 @@ function loadChatView() {
         };
     }
 
-        /**
+    /**
+     * Handles typing notifications received from the server.
+     * @param {Object} message - The typing message object.
+     */
+    function handleTypingNotification(message) {
+        if (!selectedUser || message.sender_id !== selectedUser.id) {
+            return;
+        }
+
+        if (message.type === 'typing') {
+            showTypingIndicator(selectedUser.username || 'User');
+        } else if (message.type === 'stop_typing') {
+            hideTypingIndicator();
+        }
+    }
+
+    /**
+     * Displays the typing indicator.
+     * @param {string} username - The name of the user who is typing.
+     */
+    function showTypingIndicator(username) {
+        if (!typingIndicatorElement) {
+            typingIndicatorElement = document.createElement('div');
+            typingIndicatorElement.className = 'flex items-center mb-4 typing-indicator';
+            typingIndicatorElement.innerHTML = `
+               <div class="typing-indicator max-w-[70%] p-3 rounded-lg bg-gray-200">
+                     <div class="flex items-center space-x-2">
+                      <p class="text-sm text-gray-500 italic">${username} is typing...</p>
+                        <div class="dot-container flex space-x-1">
+                          <span class="dot bg-gray-500"></span>
+                        <span class="dot bg-gray-500"></span>
+                       <span class="dot bg-gray-500"></span>
+                    </div>
+                  </div>
+            </div>
+            `;
+            chatMessagesContainer.appendChild(typingIndicatorElement);
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        }
+    }
+
+    /**
+     * Hides the typing indicator.
+     */
+    function hideTypingIndicator() {
+        if (typingIndicatorElement) {
+            chatMessagesContainer.removeChild(typingIndicatorElement);
+            typingIndicatorElement = null;
+        }
+    }
+
+    /**
      * Displays a desktop notification for a new message.
      * @param {Object} message - The message object containing details about the new message.
      */
-        function showNotification(message) {
-            // Check if notifications are permitted
-            if (Notification.permission === 'granted') {
-                // Optional: Check if the page is visible
-                if (document.hidden) {
-                    const notification = new Notification(`New message from ${message.sender_name || 'Someone'}`, {
-                        body: message.content || 'You have a new message.',
-                        // Optional: Add an icon
-                        icon: '/static/images/notification-icon.png', // Replace with your icon path
-                        // Optional: Add a click handler to focus the window
-                    });
-        
-                    notification.onclick = function () {
-                        window.focus();
-                        this.close();
-                    };
-                }
+    function showNotification(message) {
+        // Check if notifications are permitted
+        if (Notification.permission === 'granted') {
+            // Optional: Check if the page is visible
+            if (document.hidden) {
+                const notification = new Notification(`New message from ${message.sender_name || 'Someone'}`, {
+                    body: message.content || 'You have a new message.',
+                    // Optional: Add an icon
+                    icon: '/static/images/notification-icon.png', // Replace with your icon path
+                    // Optional: Add a click handler to focus the window
+                });
+    
+                notification.onclick = function () {
+                    window.focus();
+                    this.close();
+                };
             }
         }
+    }
 
     /**
      * Render the list of users in the chat interface.
@@ -248,7 +305,6 @@ function loadChatView() {
         renderUsers();
     }
 
-    
     function handleUserClick(user) {
         selectedUser = user;
         cardTitle.textContent = `Chat with ${user.username}`;
@@ -262,7 +318,7 @@ function loadChatView() {
     
         updateChatInterface();
     }
-    
+
     /**
      * Load chat history with the selected user.
      */
@@ -304,14 +360,12 @@ function loadChatView() {
                 loadingMessages = false;
             });
     }
-    
-    
+
     function insertLineBreaks(text, maxChars) {
         const regex = new RegExp(`.{1,${maxChars}}`, 'g');
         return text.match(regex).join('<br>');
     }
 
-   
     function renderChatMessages(scrollToBottom = false) {
         chatMessagesContainer.innerHTML = '';
         chatMessages.forEach(message => {
@@ -348,6 +402,11 @@ function loadChatView() {
             chatMessagesContainer.appendChild(messageDiv);
         });
 
+        // If typing indicator is active, re-add it at the end
+        if (typingIndicatorElement) {
+            chatMessagesContainer.appendChild(typingIndicatorElement);
+        }
+
         if (scrollToBottom) {
             // Scroll to bottom
             chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
@@ -381,6 +440,7 @@ function loadChatView() {
             }
 
             const messageObj = {
+                type: 'message',
                 content: messageContent,
                 receiver_id: selectedUser.id,
                 sender_id: currentUserID,
@@ -392,6 +452,7 @@ function loadChatView() {
             renderChatMessages(true);  // Scroll to bottom on new message
 
             newMessageInput.value = '';
+            stopTyping(); // Stop typing indicator when message is sent
         }
     }
 
@@ -404,6 +465,7 @@ function loadChatView() {
         cardTitle.textContent = 'User Online Status';
         chatView.classList.add('hidden');
         userListView.classList.remove('hidden');
+        hideTypingIndicator();
     }
 
     /**
@@ -440,7 +502,10 @@ function loadChatView() {
         }
     }
 
-   
+    /**
+     * Display a system message in the chat.
+     * @param {string} content - The content of the system message.
+     */
     function displaySystemMessage(content) {
         const systemMessageDiv = document.createElement('div');
         systemMessageDiv.className = 'flex justify-center mb-4';
@@ -449,6 +514,48 @@ function loadChatView() {
         `;
         chatMessagesContainer.appendChild(systemMessageDiv);
         chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
+
+    /**
+     * Send typing notification to the server.
+     */
+    function sendTypingNotification() {
+        if (ws && ws.readyState === WebSocket.OPEN && selectedUser && !isTyping) {
+            const typingMessage = {
+                type: 'typing',
+                receiver_id: selectedUser.id,
+                sender_id: currentUserID,
+            };
+            ws.send(JSON.stringify(typingMessage));
+            isTyping = true;
+        }
+    }
+
+    /**
+     * Send stop typing notification to the server.
+     */
+    function stopTyping() {
+        if (ws && ws.readyState === WebSocket.OPEN && selectedUser && isTyping) {
+            const stopTypingMessage = {
+                type: 'stop_typing',
+                receiver_id: selectedUser.id,
+                sender_id: currentUserID,
+            };
+            ws.send(JSON.stringify(stopTypingMessage));
+            isTyping = false;
+        }
+    }
+
+    /**
+     * Handle typing events to send typing notifications.
+     */
+    function handleTyping() {
+        sendTypingNotification();
+
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            stopTyping();
+        }, 3000); // Stop typing after 3 seconds of inactivity
     }
 
     // Event Listeners
@@ -460,22 +567,20 @@ function loadChatView() {
         if (e.key === 'Enter') {
             handleSendMessage();
             charCount.textContent = `50 characters remaining`;
+        } else {
+            handleTyping();
         }
     });
+    newMessageInput.addEventListener('input', function () {
+        handleTyping();
+        const remaining = 50 - newMessageInput.value.length;
+        charCount.textContent = `${remaining} character${remaining !== 1 ? 's' : ''} remaining`;
+    });
     chatMessagesContainer.addEventListener('scroll', debounce(handleScroll, 300));
-
-    // Character Count 
-    if (newMessageInput && charCount) {
-        newMessageInput.addEventListener('input', function () {
-            const remaining = 50 - newMessageInput.value.length;
-            charCount.textContent = `${remaining} character${remaining !== 1 ? 's' : ''} remaining`;
-        });
-    }
 
     // Initial Render
     renderUsers();
 }
-
 
 function debounce(func, wait) {
     let timeout;
@@ -494,24 +599,3 @@ document.addEventListener('DOMContentLoaded', function () {
         loadChatView();
     }
 });
-
-/**
- * Function to update the chat interface based on the selected user's online status.
- * Added to ensure proper message input handling.
- */
-function updateChatInterface() {
-    const offlineMessage = document.getElementById('chat-offline-message');
-    if (selectedUser && !selectedUser.online) {
-        newMessageInput.disabled = true;
-        sendButton.disabled = true;
-        sendButton.classList.add('opacity-50', 'cursor-not-allowed');
-        offlineMessage.classList.remove('hidden');
-    } else {
-        newMessageInput.disabled = false;
-        sendButton.disabled = false;
-        sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        if (offlineMessage) {
-            offlineMessage.classList.add('hidden');
-        }
-    }
-}
