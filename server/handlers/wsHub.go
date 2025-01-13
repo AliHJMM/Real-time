@@ -5,7 +5,7 @@ import (
 	"talknet/server/sessions"
 	"talknet/structs"
 )
-
+ 
 type Hub struct {
 	clients    map[int]map[*Client]bool // Map of clients per user ID
 	broadcast  chan structs.Message
